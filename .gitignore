@@ -1,0 +1,51 @@
+# Virtual environments
+venv/
+.env/
+.venv/
+env/
+venv*
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+.vscode
+.idea
+
+# Package and distribution files
+*.egg
+*.egg-info/
+dist/
+build/
+pip-wheel-metadata/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Database files
+*.db
+*.sqlite3
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Testing and coverage
+.coverage
+.htmlcov/
+.pytest_cache/
+
+.cursorignore
