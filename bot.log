@@ -399,3 +399,25 @@ reply_markup
 2025-09-26 22:40:24,459 - aiogram.dispatcher - INFO - Run polling for bot @ezoteric_test_dev_bot id=8367480117 - 'ezoteric_test_dev_bot'
 2025-09-26 22:42:21,898 - handlers - INFO - Пользователь 627875032 запустил бота
 2025-09-26 22:42:22,109 - aiogram.event - INFO - Update id=567057127 is handled. Duration 219 ms by bot id=8367480117
+2025-09-26 22:53:15,398 - __main__ - INFO - Обработчики зарегистрированы
+2025-09-26 22:53:15,685 - __main__ - INFO - Бот запущен!
+2025-09-26 22:53:15,685 - __main__ - ERROR - Ошибка при запуске бота: name 'API_TOKEN' is not defined
+2025-09-26 22:53:15,685 - aiogram.dispatcher - INFO - Start polling
+2025-09-26 22:53:15,860 - aiogram.dispatcher - INFO - Run polling for bot @ezoteric_test_dev_bot id=8367480117 - 'ezoteric_test_dev_bot'
+2025-09-26 22:53:54,980 - __main__ - INFO - Обработчики зарегистрированы
+2025-09-26 22:53:55,267 - __main__ - INFO - Бот запущен!
+2025-09-26 22:53:55,267 - __main__ - ERROR - Ошибка при запуске бота: name 'API_TOKEN' is not defined
+2025-09-26 22:53:55,267 - aiogram.dispatcher - INFO - Start polling
+2025-09-26 22:53:55,438 - aiogram.dispatcher - INFO - Run polling for bot @ezoteric_test_dev_bot id=8367480117 - 'ezoteric_test_dev_bot'
+2025-09-26 22:54:15,794 - handlers - INFO - Пользователь 627875032 запустил бота
+2025-09-26 22:54:15,996 - aiogram.event - INFO - Update id=567057128 is handled. Duration 203 ms by bot id=8367480117
+2025-09-26 22:55:24,957 - __main__ - INFO - Обработчики зарегистрированы
+2025-09-26 22:55:25,256 - __main__ - INFO - Бот запущен!
+2025-09-26 22:55:25,541 - __main__ - INFO - Планировщик уведомлений запущен
+2025-09-26 22:55:25,546 - storage - INFO - Нет неактивных пользователей для удаления
+2025-09-26 22:55:25,546 - __main__ - INFO - Очищено None старых записей
+2025-09-26 22:55:25,546 - aiogram.dispatcher - INFO - Start polling
+2025-09-26 22:55:25,546 - scheduler - INFO - Планировщик уведомлений запущен (время отправки: 9:00)
+2025-09-26 22:55:25,706 - aiogram.dispatcher - INFO - Run polling for bot @ezoteric_test_dev_bot id=8367480117 - 'ezoteric_test_dev_bot'
+2025-09-26 22:55:47,139 - handlers - INFO - Пользователь 627875032 запустил бота
+2025-09-26 22:55:47,359 - aiogram.event - INFO - Update id=567057129 is handled. Duration 219 ms by bot id=8367480117

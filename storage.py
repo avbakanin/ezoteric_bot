@@ -302,25 +302,33 @@ class UserStorage:
         """
         Очищает старые данные пользователей
         """
-        cutoff_date = datetime.now() - timedelta(days=days)
-        users_to_remove = []
-        
-        for user_id, user_data in self.data.items():
-            last_activity = user_data.get("last_activity")
-            if last_activity:
-                try:
-                    activity_date = datetime.strptime(last_activity, "%Y-%m-%d %H:%M:%S")
-                    if activity_date < cutoff_date:
+        try:
+            cutoff_date = datetime.now() - timedelta(days=days)
+            users_to_remove = []
+            
+            for user_id, user_data in self.data.items():
+                last_activity = user_data.get("last_activity")
+                if last_activity:
+                    try:
+                        activity_date = datetime.strptime(last_activity, "%Y-%m-%d %H:%M:%S")
+                        if activity_date < cutoff_date:
+                            users_to_remove.append(user_id)
+                    except ValueError as e:
+                        logger.warning(f"Неверный формат даты для пользователя {user_id}: {last_activity}")
+                        # Удаляем пользователей с неверными датами
                         users_to_remove.append(user_id)
-                except:
-                    continue
-        
-        for user_id in users_to_remove:
-            del self.data[user_id]
-        
-        if users_to_remove:
-            self._save_data()
-            print(f"Удалено {len(users_to_remove)} неактивных пользователей")
+            
+            for user_id in users_to_remove:
+                del self.data[user_id]
+            
+            if users_to_remove:
+                self._save_data()
+                logger.info(f"Удалено {len(users_to_remove)} неактивных пользователей")
+            else:
+                logger.info("Нет неактивных пользователей для удаления")
+
+        except Exception as e:
+            logger.error(f"Ошибка при очистке старых данных: {e}")
 
 
 # Глобальный экземпляр хранилища

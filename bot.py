@@ -8,7 +8,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.filters import Command
 
-from config import API_TOKEN
+from settings import config
 from handlers import (
     start_command,
     handle_birth_date,
@@ -89,7 +89,7 @@ async def on_startup(dp):
     
     try:
         # Запускаем планировщик уведомлений
-        bot_instance = Bot(token=API_TOKEN)
+        bot_instance = Bot(token=config.BOT_TOKEN)
         notification_scheduler = get_scheduler(bot_instance)
         asyncio.create_task(notification_scheduler.start())
         logger.info("Планировщик уведомлений запущен")
@@ -111,7 +111,7 @@ async def on_shutdown(dp):
     
     try:
         # Останавливаем планировщик уведомлений
-        bot_instance = Bot(token=API_TOKEN)
+        bot_instance = Bot(token=config.BOT_TOKEN)
         notification_scheduler = get_scheduler(bot_instance)
         notification_scheduler.stop()
         logger.info("Планировщик уведомлений остановлен")
@@ -129,7 +129,7 @@ def main():
         logger.info("Обработчики зарегистрированы")
         
         # Запуск бота
-        bot_instance = Bot(token=API_TOKEN)
+        bot_instance = Bot(token=config.BOT_TOKEN)
         
         async def main_async():
             await on_startup(dp)

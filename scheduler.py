@@ -161,10 +161,9 @@ class NotificationScheduler:
         Получает текст для числа дня с учетом истории
         """
         try:
-            # Загружаем тексты для чисел
-            import json
-            with open("numbers.json", "r", encoding="utf-8") as f:
-                number_texts = json.load(f)
+            # Используем кэшированные тексты из handlers
+            from handlers import get_number_texts
+            number_texts = get_number_texts()
             
             if str(daily_number) not in number_texts:
                 logger.warning(f"Нет текстов для числа дня {daily_number}")

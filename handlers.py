@@ -47,16 +47,25 @@ class UserStates(StatesGroup):
     waiting_for_diary_observation = State()
 
 
-# Загружаем тексты для чисел
-try:
-    with open("numbers.json", "r", encoding="utf-8") as f:
-        number_texts = json.load(f)
-except FileNotFoundError:
-    logger.error("Файл numbers.json не найден")
-    number_texts = {}
-except json.JSONDecodeError as e:
-    logger.error(f"Ошибка парсинга numbers.json: {e}")
-    number_texts = {}
+# Кэш для текстов чисел
+_number_texts_cache = None
+
+def get_number_texts():
+    """
+    Получает тексты чисел с кэшированием
+    """
+    global _number_texts_cache
+    if _number_texts_cache is None:
+        try:
+            with open("numbers.json", "r", encoding="utf-8") as f:
+                _number_texts_cache = json.load(f)
+        except FileNotFoundError:
+            logger.error("Файл numbers.json не найден")
+            _number_texts_cache = {}
+        except json.JSONDecodeError as e:
+            logger.error(f"Ошибка парсинга numbers.json: {e}")
+            _number_texts_cache = {}
+    return _number_texts_cache
 
 
 def get_text(number: int, context: str, user_id: int) -> str:
@@ -64,6 +73,8 @@ def get_text(number: int, context: str, user_id: int) -> str:
     Получает текст для числа с учетом истории показанных текстов
     """
     try:
+        number_texts = get_number_texts()
+        
         if str(number) not in number_texts:
             logger.warning(f"Нет текстов для числа {number}")
             return "Информация для этого числа временно недоступна."
