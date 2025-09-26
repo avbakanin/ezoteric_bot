@@ -3,9 +3,12 @@
 """
 
 import json
+import logging
 import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
+
+logger = logging.getLogger(__name__)
 
 
 class UserStorage:
@@ -24,62 +27,95 @@ class UserStorage:
         if os.path.exists(self.storage_file):
             try:
                 with open(self.storage_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            except:
+                    data = json.load(f)
+                    logger.info(f"Данные загружены из {self.storage_file}")
+                    return data
+            except json.JSONDecodeError as e:
+                logger.error(f"Ошибка парсинга JSON в {self.storage_file}: {e}")
                 return {}
-        return {}
+            except Exception as e:
+                logger.error(f"Ошибка загрузки данных из {self.storage_file}: {e}")
+                return {}
+        else:
+            logger.info(f"Файл {self.storage_file} не существует, создаем новый")
+            return {}
     
     def _save_data(self):
         """
         Сохраняет данные в файл
         """
         try:
+            # Создаем резервную копию перед сохранением
+            if os.path.exists(self.storage_file):
+                backup_file = f"{self.storage_file}.backup"
+                with open(self.storage_file, 'r', encoding='utf-8') as src:
+                    with open(backup_file, 'w', encoding='utf-8') as dst:
+                        dst.write(src.read())
+            
             with open(self.storage_file, 'w', encoding='utf-8') as f:
                 json.dump(self.data, f, ensure_ascii=False, indent=2)
+            
+            logger.debug(f"Данные сохранены в {self.storage_file}")
+            
         except Exception as e:
-            print(f"Ошибка сохранения данных: {e}")
+            logger.error(f"Ошибка сохранения данных в {self.storage_file}: {e}")
+            raise
     
     def get_user(self, user_id: int) -> Dict[str, Any]:
         """
         Получает данные пользователя
         """
-        user_id_str = str(user_id)
-        if user_id_str not in self.data:
-            self.data[user_id_str] = {
-                "birth_date": None,
-                "life_path_number": None,
-                "soul_number": None,
-                "subscription": {
-                    "active": False,
-                    "expires": None,
-                    "type": "free"
-                },
-                "usage_stats": {
-                    "daily_requests": 0,
-                    "compatibility_checks": 0,
-                    "last_reset": datetime.now().strftime("%Y-%m-%d")
-                },
-                "notifications": {
-                    "enabled": True,
-                    "time": "09:00"
-                },
-                "text_history": [],  # История показанных текстов
-                "last_daily_notification": None,  # Дата последнего ежедневного уведомления
-                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "last_activity": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            }
-            self._save_data()
-        
-        return self.data[user_id_str]
+        try:
+            user_id_str = str(user_id)
+            if user_id_str not in self.data:
+                self.data[user_id_str] = {
+                    "birth_date": None,
+                    "life_path_number": None,
+                    "soul_number": None,
+                    "subscription": {
+                        "active": False,
+                        "expires": None,
+                        "type": "free"
+                    },
+                    "usage_stats": {
+                        "daily_requests": 0,
+                        "compatibility_checks": 0,
+                        "last_reset": datetime.now().strftime("%Y-%m-%d")
+                    },
+                    "notifications": {
+                        "enabled": True,
+                        "time": "09:00"
+                    },
+                    "text_history": [],  # История показанных текстов
+                    "last_daily_notification": None,  # Дата последнего ежедневного уведомления
+                    "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "last_activity": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+                self._save_data()
+                logger.info(f"Создан новый пользователь: {user_id}")
+            else:
+                # Обновляем время последней активности
+                self.data[user_id_str]["last_activity"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            return self.data[user_id_str]
+            
+        except Exception as e:
+            logger.error(f"Ошибка получения данных пользователя {user_id}: {e}")
+            return {}
     
     def update_user(self, user_id: int, **kwargs):
         """
         Обновляет данные пользователя
         """
-        user_data = self.get_user(user_id)
-        user_data.update(kwargs)
-        user_data["last_activity"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self._save_data()
+        try:
+            user_data = self.get_user(user_id)
+            user_data.update(kwargs)
+            user_data["last_activity"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self._save_data()
+            logger.debug(f"Данные пользователя {user_id} обновлены")
+        except Exception as e:
+            logger.error(f"Ошибка обновления данных пользователя {user_id}: {e}")
+            raise
     
     def set_birth_date(self, user_id: int, birth_date: str):
         """

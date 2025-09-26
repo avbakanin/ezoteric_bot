@@ -13,9 +13,9 @@ def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
         resize_keyboard=True,
         one_time_keyboard=False,
         keyboard=[
-            [KeyboardButton("🧮 Рассчитать Число Судьбы")],
-            [KeyboardButton("💑 Проверить Совместимость")],
-            [KeyboardButton("📊 Мой Профиль"), KeyboardButton("ℹ️ О боте")]
+            [KeyboardButton(text="🧮 Рассчитать Число Судьбы")],
+            [KeyboardButton(text="💑 Проверить Совместимость")],
+            [KeyboardButton(text="📊 Мой Профиль"), KeyboardButton(text="ℹ️ О боте")]
         ]
     )
     return keyboard
@@ -27,8 +27,8 @@ def get_result_keyboard() -> InlineKeyboardMarkup:
     """
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton("🔒 Полная расшифровка (Премиум)", callback_data="premium_full")],
-            [InlineKeyboardButton("↩️ В главное меню", callback_data="back_main")]
+            [InlineKeyboardButton(text="🔒 Полная расшифровка (Премиум)", callback_data="premium_full")],
+            [InlineKeyboardButton(text="↩️ В главное меню", callback_data="back_main")]
         ]
     )
     return keyboard
@@ -40,8 +40,8 @@ def get_compatibility_result_keyboard() -> InlineKeyboardMarkup:
     """
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton("🔒 Детальный разбор (Премиум)", callback_data="premium_compatibility")],
-            [InlineKeyboardButton("↩️ В главное меню", callback_data="back_main")]
+            [InlineKeyboardButton(text="🔒 Детальный разбор (Премиум)", callback_data="premium_compatibility")],
+            [InlineKeyboardButton(text="↩️ В главное меню", callback_data="back_main")]
         ]
     )
     return keyboard
@@ -60,8 +60,8 @@ def get_profile_keyboard(has_calculated: bool = False) -> InlineKeyboardMarkup:
     
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(button_text, callback_data=callback_data)],
-            [InlineKeyboardButton("↩️ В главное меню", callback_data="back_main")]
+            [InlineKeyboardButton(text=button_text, callback_data=callback_data)],
+            [InlineKeyboardButton(text="↩️ В главное меню", callback_data="back_main")]
         ]
     )
     return keyboard
@@ -73,10 +73,10 @@ def get_about_keyboard() -> InlineKeyboardMarkup:
     """
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton("💎 Узнать о Premium", callback_data="premium_info")],
-            [InlineKeyboardButton("📝 Оставить отзыв", callback_data="feedback")],
-            [InlineKeyboardButton("📔 Дневник наблюдений", callback_data="diary_observation")],
-            [InlineKeyboardButton("↩️ В главное меню", callback_data="back_main")]
+            [InlineKeyboardButton(text="💎 Узнать о Premium", callback_data="premium_info")],
+            [InlineKeyboardButton(text="📝 Оставить отзыв", callback_data="feedback")],
+            [InlineKeyboardButton(text="📔 Дневник наблюдений", callback_data="diary_observation")],
+            [InlineKeyboardButton(text="↩️ В главное меню", callback_data="back_main")]
         ]
     )
     return keyboard
@@ -88,9 +88,9 @@ def get_premium_info_keyboard() -> InlineKeyboardMarkup:
     """
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton("💎 Оформить Premium", callback_data="subscribe")],
-            [InlineKeyboardButton("📋 Что входит в Premium", callback_data="premium_features")],
-            [InlineKeyboardButton("↩️ Назад", callback_data="back_about")]
+            [InlineKeyboardButton(text="💎 Оформить Premium", callback_data="subscribe")],
+            [InlineKeyboardButton(text="📋 Что входит в Premium", callback_data="premium_features")],
+            [InlineKeyboardButton(text="↩️ Назад", callback_data="back_about")]
         ]
     )
     return keyboard
@@ -102,10 +102,10 @@ def get_feedback_keyboard() -> InlineKeyboardMarkup:
     """
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton("⭐ Оставить отзыв", callback_data="leave_feedback")],
-            [InlineKeyboardButton("💬 Предложение", callback_data="suggestion")],
-            [InlineKeyboardButton("🐛 Сообщить об ошибке", callback_data="report_bug")],
-            [InlineKeyboardButton("↩️ Назад", callback_data="back_about")]
+            [InlineKeyboardButton(text="⭐ Оставить отзыв", callback_data="leave_feedback")],
+            [InlineKeyboardButton(text="💬 Предложение", callback_data="suggestion")],
+            [InlineKeyboardButton(text="🐛 Сообщить об ошибке", callback_data="report_bug")],
+            [InlineKeyboardButton(text="↩️ Назад", callback_data="back_about")]
         ]
     )
     return keyboard
@@ -117,7 +117,7 @@ def get_back_to_main_keyboard() -> InlineKeyboardMarkup:
     """
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton("↩️ В главное меню", callback_data="back_main")]
+            [InlineKeyboardButton(text="↩️ В главное меню", callback_data="back_main")]
         ]
     )
     return keyboard
@@ -129,8 +129,8 @@ def get_yes_no_keyboard() -> InlineKeyboardMarkup:
     """
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton("✅ Да", callback_data="yes"), 
-             InlineKeyboardButton("❌ Нет", callback_data="no")]
+            [InlineKeyboardButton(text="✅ Да", callback_data="yes"), 
+             InlineKeyboardButton(text="❌ Нет", callback_data="no")]
         ]
     )
     return keyboard

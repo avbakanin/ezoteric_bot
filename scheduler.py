@@ -5,9 +5,10 @@
 import asyncio
 import datetime
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from aiogram import Bot
+from aiogram.exceptions import TelegramAPIError
 from calculations import calculate_daily_number
 from storage import user_storage
 
@@ -19,26 +20,28 @@ class NotificationScheduler:
     Класс для управления push-уведомлениями
     """
     
-    def __init__(self, bot: Bot):
+    def __init__(self, bot: Bot, target_hour: int = 9):
         self.bot = bot
         self.is_running = False
-        self.target_hour = 9  # Время отправки уведомлений (9 утра)
+        self.target_hour = target_hour  # Время отправки уведомлений
         self.last_sent_date = None
+        self.max_retries = 3
+        self.retry_delay = 5  # секунды
     
     async def start(self):
         """
         Запускает планировщик уведомлений
         """
         self.is_running = True
-        logger.info("Планировщик уведомлений запущен")
+        logger.info(f"Планировщик уведомлений запущен (время отправки: {self.target_hour}:00)")
         
         while self.is_running:
             try:
                 await self._check_and_send_notifications()
-                await asyncio.sleep(20)  # Проверяем каждые 20 секунд
+                await asyncio.sleep(60)  # Проверяем каждую минуту
             except Exception as e:
                 logger.error(f"Ошибка в планировщике уведомлений: {e}")
-                await asyncio.sleep(60)  # При ошибке ждем минуту
+                await asyncio.sleep(300)  # При ошибке ждем 5 минут
     
     def stop(self):
         """
@@ -119,38 +122,77 @@ class NotificationScheduler:
             f"Хорошего дня! ✨"
         )
         
-        # Отправляем сообщение
-        await self.bot.send_message(user_id, message_text)
-        
-        # Добавляем текст в историю и отмечаем отправку
-        user_storage.add_text_to_history(user_id, text)
-        user_storage.mark_daily_notification_sent(user_id)
-        
-        logger.info(f"Уведомление отправлено пользователю {user_id}")
+        # Повторные попытки отправки
+        for attempt in range(self.max_retries):
+            try:
+                await self.bot.send_message(user_id, message_text)
+                
+                # Добавляем текст в историю и отмечаем отправку
+                user_storage.add_text_to_history(user_id, text)
+                user_storage.mark_daily_notification_sent(user_id)
+                
+                logger.info(f"Уведомление отправлено пользователю {user_id}")
+                return
+                
+            except TelegramAPIError as e:
+                if e.error_code == 403:  # Пользователь заблокировал бота
+                    logger.warning(f"Пользователь {user_id} заблокировал бота")
+                    user_storage.update_user(user_id, notifications={"enabled": False})
+                    return
+                elif e.error_code == 400:  # Неверный запрос
+                    logger.error(f"Неверный запрос для пользователя {user_id}: {e}")
+                    return
+                else:
+                    logger.warning(f"Попытка {attempt + 1} отправки уведомления пользователю {user_id} неудачна: {e}")
+                    if attempt < self.max_retries - 1:
+                        await asyncio.sleep(self.retry_delay)
+                    else:
+                        raise
+                        
+            except Exception as e:
+                logger.warning(f"Попытка {attempt + 1} отправки уведомления пользователю {user_id} неудачна: {e}")
+                if attempt < self.max_retries - 1:
+                    await asyncio.sleep(self.retry_delay)
+                else:
+                    raise
     
     def _get_daily_text(self, daily_number: int, text_history: List[str]) -> str:
         """
         Получает текст для числа дня с учетом истории
         """
-        # Загружаем тексты для чисел
-        import json
-        with open("numbers.json", "r", encoding="utf-8") as f:
-            number_texts = json.load(f)
-        
-        if str(daily_number) not in number_texts:
+        try:
+            # Загружаем тексты для чисел
+            import json
+            with open("numbers.json", "r", encoding="utf-8") as f:
+                number_texts = json.load(f)
+            
+            if str(daily_number) not in number_texts:
+                logger.warning(f"Нет текстов для числа дня {daily_number}")
+                return "Сегодня особенный день! Доверьтесь своей интуиции."
+            
+            if "daily" not in number_texts[str(daily_number)]:
+                logger.warning(f"Нет контекста 'daily' для числа {daily_number}")
+                return "Сегодня особенный день! Доверьтесь своей интуиции."
+            
+            options = number_texts[str(daily_number)]["daily"]
+            
+            if not options:
+                logger.warning(f"Пустой список текстов для числа дня {daily_number}")
+                return "Сегодня особенный день! Доверьтесь своей интуиции."
+            
+            # Исключаем тексты, которые уже показывали
+            unused = [t for t in options if t not in text_history]
+            
+            # Если все тексты показаны, очищаем историю и используем все варианты
+            if not unused:
+                unused = options
+            
+            import random
+            return random.choice(unused)
+            
+        except Exception as e:
+            logger.error(f"Ошибка получения текста для числа дня {daily_number}: {e}")
             return "Сегодня особенный день! Доверьтесь своей интуиции."
-        
-        options = number_texts[str(daily_number)]["daily"]
-        
-        # Исключаем тексты, которые уже показывали
-        unused = [t for t in options if t not in text_history]
-        
-        # Если все тексты показаны, очищаем историю и используем все варианты
-        if not unused:
-            unused = options
-        
-        import random
-        return random.choice(unused)
     
     async def send_test_notification(self, user_id: int):
         """

@@ -5,8 +5,8 @@
 import asyncio
 import logging
 from aiogram import Bot, Dispatcher, types
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.utils import executor
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.filters import Command
 
 from config import API_TOKEN
 from handlers import (
@@ -34,14 +34,17 @@ from scheduler import get_scheduler
 # Настройка логирования
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('bot.log', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
 )
 logger = logging.getLogger(__name__)
 
-# Инициализация бота и диспетчера
-bot = Bot(token=API_TOKEN)
+# Инициализация диспетчера
 storage = MemoryStorage()
-dp = Dispatcher(bot, storage=storage)
+dp = Dispatcher(storage=storage)
 
 
 def register_handlers():
@@ -49,30 +52,30 @@ def register_handlers():
     Регистрация обработчиков
     """
     # Команды
-    dp.register_message_handler(start_command, commands=['start'])
-    dp.register_message_handler(menu_command, commands=['menu'])
-    dp.register_message_handler(premium_info_command, commands=['premium_info'])
-    dp.register_message_handler(feedback_command, commands=['feedback'])
-    dp.register_message_handler(help_command, commands=['help'])
+    dp.message.register(start_command, Command('start'))
+    dp.message.register(menu_command, Command('menu'))
+    dp.message.register(premium_info_command, Command('premium_info'))
+    dp.message.register(feedback_command, Command('feedback'))
+    dp.message.register(help_command, Command('help'))
     
     # Обработчики состояний
-    dp.register_message_handler(handle_birth_date, state=UserStates.waiting_for_birth_date)
-    dp.register_message_handler(handle_first_date, state=UserStates.waiting_for_first_date)
-    dp.register_message_handler(handle_second_date, state=UserStates.waiting_for_second_date)
-    dp.register_message_handler(handle_feedback, state=UserStates.waiting_for_feedback)
-    dp.register_message_handler(handle_diary_observation, state=UserStates.waiting_for_diary_observation)
+    dp.message.register(handle_birth_date, UserStates.waiting_for_birth_date)
+    dp.message.register(handle_first_date, UserStates.waiting_for_first_date)
+    dp.message.register(handle_second_date, UserStates.waiting_for_second_date)
+    dp.message.register(handle_feedback, UserStates.waiting_for_feedback)
+    dp.message.register(handle_diary_observation, UserStates.waiting_for_diary_observation)
     
     # Обработчики текстовых команд (главное меню)
-    dp.register_message_handler(calculate_number_command, text="🧮 Рассчитать Число Судьбы")
-    dp.register_message_handler(compatibility_command, text="💑 Проверить Совместимость")
-    dp.register_message_handler(profile_command, text="📊 Мой Профиль")
-    dp.register_message_handler(about_command, text="ℹ️ О боте")
+    dp.message.register(calculate_number_command, lambda m: m.text == "🧮 Рассчитать Число Судьбы")
+    dp.message.register(compatibility_command, lambda m: m.text == "💑 Проверить Совместимость")
+    dp.message.register(profile_command, lambda m: m.text == "📊 Мой Профиль")
+    dp.message.register(about_command, lambda m: m.text == "ℹ️ О боте")
     
     # Callback обработчики
-    dp.register_callback_query_handler(handle_callback_query)
+    dp.callback_query.register(handle_callback_query)
     
     # Обработчик неизвестных сообщений
-    dp.register_message_handler(unknown_message)
+    dp.message.register(unknown_message)
 
 
 # Удаляем старые функции, теперь используем NotificationScheduler
@@ -84,13 +87,20 @@ async def on_startup(dp):
     """
     logger.info("Бот запущен!")
     
-    # Запускаем планировщик уведомлений
-    notification_scheduler = get_scheduler(bot)
-    asyncio.create_task(notification_scheduler.start())
-    
-    # Очищаем старые данные (старше 30 дней)
-    from storage import user_storage
-    user_storage.cleanup_old_data(30)
+    try:
+        # Запускаем планировщик уведомлений
+        bot_instance = Bot(token=API_TOKEN)
+        notification_scheduler = get_scheduler(bot_instance)
+        asyncio.create_task(notification_scheduler.start())
+        logger.info("Планировщик уведомлений запущен")
+        
+        # Очищаем старые данные (старше 30 дней)
+        from storage import user_storage
+        cleaned_count = user_storage.cleanup_old_data(30)
+        logger.info(f"Очищено {cleaned_count} старых записей")
+        
+    except Exception as e:
+        logger.error(f"Ошибка при запуске бота: {e}")
 
 
 async def on_shutdown(dp):
@@ -99,24 +109,40 @@ async def on_shutdown(dp):
     """
     logger.info("Бот остановлен!")
     
-    # Останавливаем планировщик уведомлений
-    notification_scheduler = get_scheduler(bot)
-    notification_scheduler.stop()
+    try:
+        # Останавливаем планировщик уведомлений
+        bot_instance = Bot(token=API_TOKEN)
+        notification_scheduler = get_scheduler(bot_instance)
+        notification_scheduler.stop()
+        logger.info("Планировщик уведомлений остановлен")
+        
+    except Exception as e:
+        logger.error(f"Ошибка при остановке бота: {e}")
 
 
 def main():
     """
     Главная функция
     """
-    register_handlers()
-    
-    # Запуск бота
-    executor.start_polling(
-        dp,
-        skip_updates=True,
-        on_startup=on_startup,
-        on_shutdown=on_shutdown
-    )
+    try:
+        register_handlers()
+        logger.info("Обработчики зарегистрированы")
+        
+        # Запуск бота
+        bot_instance = Bot(token=API_TOKEN)
+        
+        async def main_async():
+            await on_startup(dp)
+            try:
+                await dp.start_polling(bot_instance, skip_updates=True)
+            finally:
+                await on_shutdown(dp)
+        
+        asyncio.run(main_async())
+        
+    except Exception as e:
+        logger.error(f"Критическая ошибка при запуске бота: {e}")
+        raise
 
 
 if __name__ == '__main__':

@@ -1,0 +1,25 @@
+{
+  "627875032": {
+    "birth_date": null,
+    "life_path_number": null,
+    "soul_number": null,
+    "subscription": {
+      "active": false,
+      "expires": null,
+      "type": "free"
+    },
+    "usage_stats": {
+      "daily_requests": 0,
+      "compatibility_checks": 0,
+      "last_reset": "2025-09-26"
+    },
+    "notifications": {
+      "enabled": true,
+      "time": "09:00"
+    },
+    "text_history": [],
+    "last_daily_notification": null,
+    "created_at": "2025-09-26 22:27:40",
+    "last_activity": "2025-09-26 22:27:40"
+  }
+}

@@ -3,10 +3,14 @@
 """
 
 import json
+import logging
 import random
+from datetime import datetime
+from typing import Optional
+
 from aiogram import types
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery
 
 from calculations import (
@@ -27,6 +31,9 @@ from keyboards import (
     get_yes_no_keyboard
 )
 from storage import user_storage
+from security import security_validator
+
+logger = logging.getLogger(__name__)
 
 
 class UserStates(StatesGroup):
@@ -41,108 +48,173 @@ class UserStates(StatesGroup):
 
 
 # Загружаем тексты для чисел
-with open("numbers.json", "r", encoding="utf-8") as f:
-    number_texts = json.load(f)
-
-# Удаляем старую глобальную переменную, теперь используем storage
+try:
+    with open("numbers.json", "r", encoding="utf-8") as f:
+        number_texts = json.load(f)
+except FileNotFoundError:
+    logger.error("Файл numbers.json не найден")
+    number_texts = {}
+except json.JSONDecodeError as e:
+    logger.error(f"Ошибка парсинга numbers.json: {e}")
+    number_texts = {}
 
 
 def get_text(number: int, context: str, user_id: int) -> str:
     """
     Получает текст для числа с учетом истории показанных текстов
     """
-    if str(number) not in number_texts:
-        return "Информация для этого числа временно недоступна."
-    
-    options = number_texts[str(number)][context]
-    shown = user_storage.get_text_history(user_id)
-    
-    # Исключаем тексты, которые уже показывали
-    unused = [t for t in options if t not in shown]
-    
-    # Если все тексты показаны, очищаем историю и используем все варианты
-    if not unused:
-        unused = options
-        user_storage.update_user(user_id, text_history=[])
-        shown = []
-    
-    # Если остался только один текст, используем его
-    if len(unused) == 1:
-        chosen = unused[0]
-    else:
+    try:
+        if str(number) not in number_texts:
+            logger.warning(f"Нет текстов для числа {number}")
+            return "Информация для этого числа временно недоступна."
+        
+        if context not in number_texts[str(number)]:
+            logger.warning(f"Нет контекста '{context}' для числа {number}")
+            return "Информация для этого числа временно недоступна."
+        
+        options = number_texts[str(number)][context]
+        if not options:
+            logger.warning(f"Пустой список текстов для числа {number}, контекст {context}")
+            return "Информация для этого числа временно недоступна."
+        
+        shown = user_storage.get_text_history(user_id)
+        
+        # Исключаем тексты, которые уже показывали
+        unused = [t for t in options if t not in shown]
+        
+        # Если все тексты показаны, очищаем историю и используем все варианты
+        if not unused:
+            unused = options
+            user_storage.update_user(user_id, text_history=[])
+            shown = []
+        
         # Выбираем случайный текст из неиспользованных
         chosen = random.choice(unused)
-    
-    user_storage.add_text_to_history(user_id, chosen)
-    return chosen
+        user_storage.add_text_to_history(user_id, chosen)
+        
+        return chosen
+        
+    except Exception as e:
+        logger.error(f"Ошибка в get_text: {e}")
+        return "Произошла ошибка при получении текста. Попробуйте позже."
 
 
 async def start_command(message: types.Message):
     """
     Обработчик команды /start
     """
-    user_id = message.from_user.id
-    user_data = user_storage.get_user(user_id)
-    
-    welcome_text = (
-        "🔮 Добро пожаловать в нумерологический бот!\n\n"
-        "Это ваш личный помощник в мире чисел и энергий.\n\n"
-        "✨ БЕСПЛАТНО:\n"
-        "• Рассчитайте ваше Число Судьбы\n"
-        "• Проверьте совместимость с партнёром\n\n"
-        "🚀 PREMIUM (СКОРО):\n"
-        "• Полные и детальные расшифровки\n"
-        "• Число дня и ежедневные прогнозы\n"
-        "• Анализ сильных сторон и кармических задач\n\n"
-        "Используйте кнопки ниже, чтобы начать!"
-    )
-    
-    await message.answer(welcome_text, reply_markup=get_main_menu_keyboard())
+    try:
+        user_id = message.from_user.id
+        user_data = user_storage.get_user(user_id)
+        
+        logger.info(f"Пользователь {user_id} запустил бота")
+        
+        welcome_text = (
+            "🔮 Добро пожаловать в нумерологический бот!\n\n"
+            "Это ваш личный помощник в мире чисел и энергий.\n\n"
+            "✨ БЕСПЛАТНО:\n"
+            "• Рассчитайте ваше Число Судьбы\n"
+            "• Проверьте совместимость с партнёром\n\n"
+            "🚀 PREMIUM (СКОРО):\n"
+            "• Полные и детальные расшифровки\n"
+            "• Число дня и ежедневные прогнозы\n"
+            "• Анализ сильных сторон и кармических задач\n\n"
+            "Используйте кнопки ниже, чтобы начать!"
+        )
+        
+        await message.answer(welcome_text, reply_markup=get_main_menu_keyboard())
+        
+    except Exception as e:
+        logger.error(f"Ошибка в start_command: {e}")
+        await message.answer(
+            "Произошла ошибка при запуске бота. Попробуйте позже.",
+            reply_markup=get_main_menu_keyboard()
+        )
 
 
-async def calculate_number_command(message: types.Message):
+async def calculate_number_command(message: types.Message, state: FSMContext):
     """
     Обработчик команды "🧮 Рассчитать Число Судьбы"
     """
-    await message.answer(
-        "Введите вашу дату рождения в формате ДД.ММ.ГГГГ\n"
-        "(например, 15.05.1990)",
-        reply_markup=get_back_to_main_keyboard()
-    )
-    await UserStates.waiting_for_birth_date.set()
+    try:
+        user_id = message.from_user.id
+        logger.info(f"Пользователь {user_id} запросил расчет числа судьбы")
+        
+        await message.answer(
+            "Введите вашу дату рождения в формате ДД.ММ.ГГГГ\n"
+            "(например, 15.05.1990)",
+            reply_markup=get_back_to_main_keyboard()
+        )
+        await state.set_state(UserStates.waiting_for_birth_date)
+        
+    except Exception as e:
+        logger.error(f"Ошибка в calculate_number_command: {e}")
+        await message.answer(
+            "Произошла ошибка. Попробуйте позже.",
+            reply_markup=get_back_to_main_keyboard()
+        )
 
 
 async def handle_birth_date(message: types.Message, state: FSMContext):
     """
     Обработчик ввода даты рождения
     """
-    user_id = message.from_user.id
-    birth_date = message.text.strip()
-    
-    if not validate_date(birth_date):
-        await message.answer(
-            "❌ Неверный формат даты. Пожалуйста, введите дату в формате ДД.ММ.ГГГГ\n"
-            "Например: 15.03.1990"
-        )
+    try:
+        user_id = message.from_user.id
+        birth_date = message.text.strip()
+        
+        logger.info(f"Пользователь {user_id} ввел дату рождения: {birth_date}")
+        
+        # Проверяем rate limit
+        if not security_validator.rate_limit_check(user_id, "birth_date", limit=5, window=300):
+            await message.answer(
+                "⏰ Слишком много запросов. Подождите 5 минут и попробуйте снова.",
+                reply_markup=get_back_to_main_keyboard()
+            )
+            return
+        
+        # Валидируем ввод
+        if not security_validator.validate_user_input(birth_date, max_length=20):
+            await message.answer(
+                "❌ Некорректный ввод. Пожалуйста, введите дату в формате ДД.ММ.ГГГГ",
+                reply_markup=get_back_to_main_keyboard()
+            )
+            return
+        
+        if not validate_date(birth_date):
+            await message.answer(
+                "❌ Неверный формат даты. Пожалуйста, введите дату в формате ДД.ММ.ГГГГ\n"
+                "Например: 15.03.1990"
+            )
         return
     
-    # Сохраняем дату рождения
-    user_storage.set_birth_date(user_id, birth_date)
-    
-    # Вычисляем число судьбы
-    life_path = calculate_life_path_number(birth_date)
-    text = get_text(life_path, "life_path", user_id)
-    
-    result_text = (
-        f"🔮 ВАШЕ ЧИСЛО СУДЬБЫ: {life_path}\n\n"
-        f"{text}"
-    )
-    
-    await message.answer(result_text, reply_markup=get_result_keyboard())
-    await state.finish()
+        # Сохраняем дату рождения
+        user_storage.set_birth_date(user_id, birth_date)
+        
+        # Вычисляем число судьбы
+        life_path = calculate_life_path_number(birth_date)
+        text = get_text(life_path, "life_path", user_id)
+        
+        result_text = (
+            f"🔮 ВАШЕ ЧИСЛО СУДЬБЫ: {life_path}\n\n"
+            f"{text}"
+        )
+        
+        await message.answer(result_text, reply_markup=get_result_keyboard())
+        await state.clear()
+        
+        logger.info(f"Число судьбы {life_path} рассчитано для пользователя {user_id}")
+        
+    except Exception as e:
+        logger.error(f"Ошибка в handle_birth_date: {e}")
+        await message.answer(
+            "Произошла ошибка при обработке даты рождения. Попробуйте позже.",
+            reply_markup=get_back_to_main_keyboard()
+        )
+        await state.clear()
 
 
-async def compatibility_command(message: types.Message):
+async def compatibility_command(message: types.Message, state: FSMContext):
     """
     Обработчик команды "💑 Проверить Совместимость"
     """
@@ -150,7 +222,7 @@ async def compatibility_command(message: types.Message):
         "Введите первую дату рождения (ДД.ММ.ГГГГ):",
         reply_markup=get_back_to_main_keyboard()
     )
-    await UserStates.waiting_for_first_date.set()
+    await state.set_state(UserStates.waiting_for_first_date)
 
 
 async def handle_first_date(message: types.Message, state: FSMContext):
@@ -173,7 +245,7 @@ async def handle_first_date(message: types.Message, state: FSMContext):
         "Введите вторую дату рождения (ДД.ММ.ГГГГ):",
         reply_markup=get_back_to_main_keyboard()
     )
-    await UserStates.waiting_for_second_date.set()
+    await state.set_state(UserStates.waiting_for_second_date)
 
 
 async def handle_second_date(message: types.Message, state: FSMContext):
@@ -312,7 +384,10 @@ async def handle_callback_query(callback_query: CallbackQuery):
     
     if callback_query.data == "back_main":
         await callback_query.message.edit_text(
-            "🔮 Главное меню",
+            "🔮 Главное меню"
+        )
+        await callback_query.message.answer(
+            "Выберите действие:",
             reply_markup=get_main_menu_keyboard()
         )
     elif callback_query.data == "back_about":
@@ -358,14 +433,14 @@ async def handle_callback_query(callback_query: CallbackQuery):
             "(например, 15.05.1990)",
             reply_markup=get_back_to_main_keyboard()
         )
-        await UserStates.waiting_for_birth_date.set()
+        await state.set_state(UserStates.waiting_for_birth_date)
     elif callback_query.data == "recalculate":
         await callback_query.message.edit_text(
             "Введите вашу дату рождения в формате ДД.ММ.ГГГГ\n"
             "(например, 15.05.1990)",
             reply_markup=get_back_to_main_keyboard()
         )
-        await UserStates.waiting_for_birth_date.set()
+        await state.set_state(UserStates.waiting_for_birth_date)
     elif callback_query.data == "premium_info":
         await callback_query.message.edit_text(
             "💎 PREMIUM ПОДПИСКА\n\n"
@@ -418,21 +493,21 @@ async def handle_callback_query(callback_query: CallbackQuery):
             "Напишите ваш отзыв о боте:",
             reply_markup=get_back_to_main_keyboard()
         )
-        await UserStates.waiting_for_feedback.set()
+        await state.set_state(UserStates.waiting_for_feedback)
     elif callback_query.data == "suggestion":
         await callback_query.message.edit_text(
             "💬 ПРЕДЛОЖЕНИЕ\n\n"
             "Напишите ваше предложение по улучшению бота:",
             reply_markup=get_back_to_main_keyboard()
         )
-        await UserStates.waiting_for_feedback.set()
+        await state.set_state(UserStates.waiting_for_feedback)
     elif callback_query.data == "report_bug":
         await callback_query.message.edit_text(
             "🐛 СООБЩИТЬ ОБ ОШИБКЕ\n\n"
             "Опишите проблему, с которой вы столкнулись:",
             reply_markup=get_back_to_main_keyboard()
         )
-        await UserStates.waiting_for_feedback.set()
+        await state.set_state(UserStates.waiting_for_feedback)
     elif callback_query.data == "diary_observation":
         await callback_query.message.edit_text(
             "📔 ДНЕВНИК НАБЛЮДЕНИЙ\n\n"
@@ -441,60 +516,123 @@ async def handle_callback_query(callback_query: CallbackQuery):
             "Напишите ваше наблюдение:",
             reply_markup=get_back_to_main_keyboard()
         )
-        await UserStates.waiting_for_diary_observation.set()
+        await state.set_state(UserStates.waiting_for_diary_observation)
 
 
 async def handle_feedback(message: types.Message, state: FSMContext):
     """
     Обработчик ввода отзыва/предложения
     """
-    feedback_text = message.text.strip()
-    user_id = message.from_user.id
-    
-    # Здесь можно сохранить отзыв в базу данных или отправить администратору
-    # Пока просто подтверждаем получение
-    
-    await message.answer(
-        "✅ Спасибо за ваш отзыв!\n\n"
-        "Ваше мнение очень важно для нас. Мы обязательно учтем ваши предложения.",
-        reply_markup=get_back_to_main_keyboard()
-    )
-    
-    await state.finish()
+    try:
+        feedback_text = message.text.strip()
+        user_id = message.from_user.id
+        
+        logger.info(f"Пользователь {user_id} отправил отзыв")
+        
+        # Проверяем rate limit
+        if not security_validator.rate_limit_check(user_id, "feedback", limit=3, window=3600):
+            await message.answer(
+                "⏰ Слишком много отзывов. Подождите час и попробуйте снова.",
+                reply_markup=get_back_to_main_keyboard()
+            )
+            await state.clear()
+            return
+        
+        # Валидируем ввод
+        if not security_validator.validate_user_input(feedback_text, max_length=2000):
+            await message.answer(
+                "❌ Некорректный ввод. Пожалуйста, проверьте текст отзыва.",
+                reply_markup=get_back_to_main_keyboard()
+            )
+            await state.clear()
+            return
+        
+        # Очищаем текст
+        sanitized_text = security_validator.sanitize_text(feedback_text)
+        
+        # Здесь можно сохранить отзыв в базу данных или отправить администратору
+        # Пока просто подтверждаем получение
+        
+        await message.answer(
+            "✅ Спасибо за ваш отзыв!\n\n"
+            "Ваше мнение очень важно для нас. Мы обязательно учтем ваши предложения.",
+            reply_markup=get_back_to_main_keyboard()
+        )
+        
+        await state.clear()
+        
+    except Exception as e:
+        logger.error(f"Ошибка в handle_feedback: {e}")
+        await message.answer(
+            "Произошла ошибка при обработке отзыва. Попробуйте позже.",
+            reply_markup=get_back_to_main_keyboard()
+        )
+        await state.clear()
 
 
 async def handle_diary_observation(message: types.Message, state: FSMContext):
     """
     Обработчик ввода наблюдения в дневник
     """
-    observation_text = message.text.strip()
-    user_id = message.from_user.id
-    
-    # Сохраняем наблюдение пользователя
-    user_data = user_storage.get_user(user_id)
-    if "diary_observations" not in user_data:
-        user_data["diary_observations"] = []
-    
-    # Добавляем новое наблюдение с датой
-    from datetime import datetime
-    observation = {
-        "text": observation_text,
-        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "number": user_data.get("life_path_number", "неизвестно")
-    }
-    
-    user_data["diary_observations"].append(observation)
-    user_storage._save_data()
-    
-    await message.answer(
-        "📝 Наблюдение сохранено!\n\n"
-        f"Ваше число судьбы: {observation['number']}\n"
-        f"Дата: {observation['date']}\n\n"
-        "Продолжайте вести дневник для лучшего понимания себя!",
-        reply_markup=get_back_to_main_keyboard()
-    )
-    
-    await state.finish()
+    try:
+        observation_text = message.text.strip()
+        user_id = message.from_user.id
+        
+        logger.info(f"Пользователь {user_id} добавил наблюдение в дневник")
+        
+        # Проверяем rate limit
+        if not security_validator.rate_limit_check(user_id, "diary", limit=10, window=3600):
+            await message.answer(
+                "⏰ Слишком много записей в дневник. Подождите час и попробуйте снова.",
+                reply_markup=get_back_to_main_keyboard()
+            )
+            await state.clear()
+            return
+        
+        # Валидируем ввод
+        if not security_validator.validate_user_input(observation_text, max_length=2000):
+            await message.answer(
+                "❌ Некорректный ввод. Пожалуйста, проверьте текст наблюдения.",
+                reply_markup=get_back_to_main_keyboard()
+            )
+            await state.clear()
+        return
+
+        # Очищаем текст
+        sanitized_text = security_validator.sanitize_text(observation_text)
+        
+        # Сохраняем наблюдение пользователя
+        user_data = user_storage.get_user(user_id)
+        if "diary_observations" not in user_data:
+            user_data["diary_observations"] = []
+        
+        # Добавляем новое наблюдение с датой
+        observation = {
+            "text": sanitized_text,
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "number": user_data.get("life_path_number", "неизвестно")
+        }
+        
+        user_data["diary_observations"].append(observation)
+        user_storage._save_data()
+        
+        await message.answer(
+            "📝 Наблюдение сохранено!\n\n"
+            f"Ваше число судьбы: {observation['number']}\n"
+            f"Дата: {observation['date']}\n\n"
+            "Продолжайте вести дневник для лучшего понимания себя!",
+            reply_markup=get_back_to_main_keyboard()
+        )
+        
+        await state.clear()
+        
+    except Exception as e:
+        logger.error(f"Ошибка в handle_diary_observation: {e}")
+        await message.answer(
+            "Произошла ошибка при сохранении наблюдения. Попробуйте позже.",
+            reply_markup=get_back_to_main_keyboard()
+        )
+        await state.clear()
 
 
 async def help_command(message: types.Message):
