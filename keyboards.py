@@ -75,6 +75,7 @@ def get_about_keyboard() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [InlineKeyboardButton("💎 Узнать о Premium", callback_data="premium_info")],
             [InlineKeyboardButton("📝 Оставить отзыв", callback_data="feedback")],
+            [InlineKeyboardButton("📔 Дневник наблюдений", callback_data="diary_observation")],
             [InlineKeyboardButton("↩️ В главное меню", callback_data="back_main")]
         ]
     )

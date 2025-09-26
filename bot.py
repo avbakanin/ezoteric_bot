@@ -22,6 +22,7 @@ from handlers import (
     premium_info_command,
     feedback_command,
     handle_feedback,
+    handle_diary_observation,
     handle_callback_query,
     help_command,
     unknown_message,
@@ -59,6 +60,7 @@ def register_handlers():
     dp.register_message_handler(handle_first_date, state=UserStates.waiting_for_first_date)
     dp.register_message_handler(handle_second_date, state=UserStates.waiting_for_second_date)
     dp.register_message_handler(handle_feedback, state=UserStates.waiting_for_feedback)
+    dp.register_message_handler(handle_diary_observation, state=UserStates.waiting_for_diary_observation)
     
     # Обработчики текстовых команд (главное меню)
     dp.register_message_handler(calculate_number_command, text="🧮 Рассчитать Число Судьбы")

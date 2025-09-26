@@ -37,6 +37,7 @@ class UserStates(StatesGroup):
     waiting_for_first_date = State()
     waiting_for_second_date = State()
     waiting_for_feedback = State()
+    waiting_for_diary_observation = State()
 
 
 # Загружаем тексты для чисел
@@ -432,6 +433,15 @@ async def handle_callback_query(callback_query: CallbackQuery):
             reply_markup=get_back_to_main_keyboard()
         )
         await UserStates.waiting_for_feedback.set()
+    elif callback_query.data == "diary_observation":
+        await callback_query.message.edit_text(
+            "📔 ДНЕВНИК НАБЛЮДЕНИЙ\n\n"
+            "Записывайте свои наблюдения о том, как ваше число судьбы проявляется в жизни.\n"
+            "Это поможет лучше понять себя и свой жизненный путь.\n\n"
+            "Напишите ваше наблюдение:",
+            reply_markup=get_back_to_main_keyboard()
+        )
+        await UserStates.waiting_for_diary_observation.set()
 
 
 async def handle_feedback(message: types.Message, state: FSMContext):
@@ -447,6 +457,40 @@ async def handle_feedback(message: types.Message, state: FSMContext):
     await message.answer(
         "✅ Спасибо за ваш отзыв!\n\n"
         "Ваше мнение очень важно для нас. Мы обязательно учтем ваши предложения.",
+        reply_markup=get_back_to_main_keyboard()
+    )
+    
+    await state.finish()
+
+
+async def handle_diary_observation(message: types.Message, state: FSMContext):
+    """
+    Обработчик ввода наблюдения в дневник
+    """
+    observation_text = message.text.strip()
+    user_id = message.from_user.id
+    
+    # Сохраняем наблюдение пользователя
+    user_data = user_storage.get_user(user_id)
+    if "diary_observations" not in user_data:
+        user_data["diary_observations"] = []
+    
+    # Добавляем новое наблюдение с датой
+    from datetime import datetime
+    observation = {
+        "text": observation_text,
+        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "number": user_data.get("life_path_number", "неизвестно")
+    }
+    
+    user_data["diary_observations"].append(observation)
+    user_storage._save_data()
+    
+    await message.answer(
+        "📝 Наблюдение сохранено!\n\n"
+        f"Ваше число судьбы: {observation['number']}\n"
+        f"Дата: {observation['date']}\n\n"
+        "Продолжайте вести дневник для лучшего понимания себя!",
         reply_markup=get_back_to_main_keyboard()
     )
     
