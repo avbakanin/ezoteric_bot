@@ -23,8 +23,6 @@ class UserStorage:
         base_dir = Path(__file__).parent
         self.storage_file = base_dir / "app" / storage_file
 
-        # Создаем папку если её нет
-        self.storage_file.parent.mkdir(exist_ok=True)
         self.data = self._load_data()
 
     def _load_data(self) -> Dict[str, Any]:

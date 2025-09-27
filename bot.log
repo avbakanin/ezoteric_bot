@@ -429,3 +429,71 @@ reply_markup
 2025-09-27 11:08:15,924 - aiogram.dispatcher - INFO - Start polling
 2025-09-27 11:08:15,926 - scheduler - INFO - Планировщик уведомлений запущен (время отправки: 9:00)
 2025-09-27 11:08:16,120 - aiogram.dispatcher - INFO - Run polling for bot @ezoteric_test_dev_bot id=8367480117 - 'ezoteric_test_dev_bot'
+2025-09-27 23:11:17,040 - __main__ - INFO - Обработчики зарегистрированы
+2025-09-27 23:11:17,293 - __main__ - INFO - Бот запущен!
+2025-09-27 23:11:17,548 - __main__ - INFO - Планировщик уведомлений запущен
+2025-09-27 23:11:17,548 - storage - INFO - Нет неактивных пользователей для удаления
+2025-09-27 23:11:17,549 - __main__ - INFO - Очищено None старых записей
+2025-09-27 23:11:17,549 - aiogram.dispatcher - INFO - Start polling
+2025-09-27 23:11:17,549 - scheduler - INFO - Планировщик уведомлений запущен (время отправки: 9:00)
+2025-09-27 23:11:17,700 - aiogram.dispatcher - INFO - Run polling for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'
+2025-09-27 23:11:30,300 - aiogram.event - INFO - Update id=221272046 is handled. Duration 218 ms by bot id=7651594720
+2025-09-27 23:11:31,951 - storage - ERROR - Ошибка сохранения данных в C:\Users\User\Desktop\ezoteric_bot\app\app\users_data.json: [Errno 2] No such file or directory: 'C:\\Users\\User\\Desktop\\ezoteric_bot\\app\\app\\users_data.json'
+2025-09-27 23:11:31,951 - storage - ERROR - Ошибка получения данных пользователя 1512454100: [Errno 2] No such file or directory: 'C:\\Users\\User\\Desktop\\ezoteric_bot\\app\\app\\users_data.json'
+2025-09-27 23:11:31,951 - decorators - ERROR - Ошибка в profile_command: 'subscription'
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\ezoteric_bot\app\decorators.py", line 19, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\ezoteric_bot\app\handlers\handlers.py", line 309, in profile_command
+    subscription_status = "Premium" if user_data["subscription"]["active"] else "Бесплатный"
+                                       ~~~~~~~~~^^^^^^^^^^^^^^^^
+KeyError: 'subscription'
+2025-09-27 23:11:32,062 - aiogram.event - INFO - Update id=221272047 is handled. Duration 108 ms by bot id=7651594720
+2025-09-27 23:11:53,922 - aiogram.dispatcher - INFO - Polling stopped
+2025-09-27 23:11:54,185 - __main__ - INFO - Бот остановлен!
+2025-09-27 23:11:54,414 - scheduler - INFO - Планировщик уведомлений остановлен
+2025-09-27 23:11:54,414 - __main__ - INFO - Планировщик уведомлений остановлен
+2025-09-27 23:11:54,416 - aiogram.dispatcher - INFO - Polling stopped for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'
+2025-09-27 23:11:56,652 - __main__ - INFO - Обработчики зарегистрированы
+2025-09-27 23:11:56,901 - __main__ - INFO - Бот запущен!
+2025-09-27 23:11:57,141 - __main__ - INFO - Планировщик уведомлений запущен
+2025-09-27 23:11:57,142 - storage - INFO - Нет неактивных пользователей для удаления
+2025-09-27 23:11:57,142 - __main__ - INFO - Очищено None старых записей
+2025-09-27 23:11:57,142 - aiogram.dispatcher - INFO - Start polling
+2025-09-27 23:11:57,143 - scheduler - INFO - Планировщик уведомлений запущен (время отправки: 9:00)
+2025-09-27 23:11:57,298 - aiogram.dispatcher - INFO - Run polling for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'
+2025-09-27 23:12:01,938 - aiogram.event - INFO - Update id=221272048 is handled. Duration 281 ms by bot id=7651594720
+2025-09-27 23:12:02,858 - storage - ERROR - Ошибка сохранения данных в C:\Users\User\Desktop\ezoteric_bot\app\app\users_data.json: [Errno 2] No such file or directory: 'C:\\Users\\User\\Desktop\\ezoteric_bot\\app\\app\\users_data.json'
+2025-09-27 23:12:02,858 - storage - ERROR - Ошибка получения данных пользователя 1512454100: [Errno 2] No such file or directory: 'C:\\Users\\User\\Desktop\\ezoteric_bot\\app\\app\\users_data.json'
+2025-09-27 23:12:02,859 - decorators - ERROR - Ошибка в profile_command: 'subscription'
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\ezoteric_bot\app\decorators.py", line 19, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\ezoteric_bot\app\handlers\handlers.py", line 309, in profile_command
+    subscription_status = "Premium" if user_data["subscription"]["active"] else "Бесплатный"
+                                       ~~~~~~~~~^^^^^^^^^^^^^^^^
+KeyError: 'subscription'
+2025-09-27 23:12:02,963 - aiogram.event - INFO - Update id=221272049 is handled. Duration 110 ms by bot id=7651594720
+2025-09-27 23:12:04,927 - aiogram.event - INFO - Update id=221272050 is handled. Duration 203 ms by bot id=7651594720
+2025-09-27 23:12:10,429 - aiogram.event - INFO - Update id=221272051 is handled. Duration 108 ms by bot id=7651594720
+2025-09-27 23:12:18,962 - handlers.handlers - INFO - Пользователь 1512454100 запросил расчет числа судьбы
+2025-09-27 23:12:19,028 - aiogram.event - INFO - Update id=221272052 is handled. Duration 62 ms by bot id=7651594720
+2025-09-27 23:12:21,238 - aiogram.event - INFO - Update id=221272053 is handled. Duration 171 ms by bot id=7651594720
+2025-09-27 23:12:23,712 - handlers.handlers - INFO - Пользователь 1512454100 ввел дату рождения: 💑 Проверить Совместимость
+2025-09-27 23:12:23,712 - decorators - ERROR - Ошибка в handle_birth_date: SecurityValidator.rate_limit_check() got an unexpected keyword argument 'limit'
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\ezoteric_bot\app\decorators.py", line 19, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\ezoteric_bot\app\handlers\handlers.py", line 188, in handle_birth_date
+    if not security_validator.rate_limit_check(user_id, "birth_date", limit=5, window=300):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SecurityValidator.rate_limit_check() got an unexpected keyword argument 'limit'
+2025-09-27 23:12:23,779 - aiogram.event - INFO - Update id=221272054 is handled. Duration 62 ms by bot id=7651594720
+2025-09-27 23:41:35,529 - aiogram.dispatcher - INFO - Polling stopped
+2025-09-27 23:41:35,785 - __main__ - INFO - Бот остановлен!
+2025-09-27 23:41:36,002 - scheduler - INFO - Планировщик уведомлений остановлен
+2025-09-27 23:41:36,002 - __main__ - INFO - Планировщик уведомлений остановлен
+2025-09-27 23:41:36,002 - aiogram.dispatcher - INFO - Polling stopped for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'

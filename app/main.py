@@ -9,32 +9,15 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "app"))
 
-
 from aiogram import Bot, Dispatcher
-from aiogram.filters import Command
 from aiogram.fsm.storage.memory import MemoryStorage
 from scheduler import get_scheduler
 from settings import config
 
-from handlers import (
-    UserStates,
-    about_command,
-    calculate_number_command,
-    compatibility_command,
-    feedback_command,
-    handle_birth_date,
-    handle_callback_query,
-    handle_diary_observation,
-    handle_feedback,
-    handle_first_date,
-    handle_second_date,
-    help_command,
-    menu_command,
-    premium_info_command,
-    profile_command,
-    start_command,
-    unknown_message,
-)
+from handlers.back import router as back_router
+from handlers.features import router as features_router
+from handlers.handlers import router as handlers_router
+from handlers.premium import router as premium_router
 
 # Настройка логирования
 logging.basicConfig(
@@ -47,40 +30,6 @@ logger = logging.getLogger(__name__)
 # Инициализация диспетчера
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
-
-
-def register_handlers():
-    """
-    Регистрация обработчиков
-    """
-    # Команды
-    dp.message.register(start_command, Command("start"))
-    dp.message.register(menu_command, Command("menu"))
-    dp.message.register(premium_info_command, Command("premium_info"))
-    dp.message.register(feedback_command, Command("feedback"))
-    dp.message.register(help_command, Command("help"))
-
-    # Обработчики состояний
-    dp.message.register(handle_birth_date, UserStates.waiting_for_birth_date)
-    dp.message.register(handle_first_date, UserStates.waiting_for_first_date)
-    dp.message.register(handle_second_date, UserStates.waiting_for_second_date)
-    dp.message.register(handle_feedback, UserStates.waiting_for_feedback)
-    dp.message.register(handle_diary_observation, UserStates.waiting_for_diary_observation)
-
-    # Обработчики текстовых команд (главное меню)
-    dp.message.register(calculate_number_command, lambda m: m.text == "🧮 Рассчитать Число Судьбы")
-    dp.message.register(compatibility_command, lambda m: m.text == "💑 Проверить Совместимость")
-    dp.message.register(profile_command, lambda m: m.text == "📊 Мой Профиль")
-    dp.message.register(about_command, lambda m: m.text == "ℹ️ О боте")
-
-    # Callback обработчики
-    dp.callback_query.register(handle_callback_query)
-
-    # Обработчик неизвестных сообщений
-    dp.message.register(unknown_message)
-
-
-# Удаляем старые функции, теперь используем NotificationScheduler
 
 
 async def on_startup(dp):
@@ -128,7 +77,11 @@ def main():
     Главная функция
     """
     try:
-        register_handlers()
+
+        dp.include_router(handlers_router)
+        dp.include_router(back_router)
+        dp.include_router(features_router)
+        dp.include_router(premium_router)
         logger.info("Обработчики зарегистрированы")
 
         # Запуск бота
