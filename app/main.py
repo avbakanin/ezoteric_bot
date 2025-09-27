@@ -97,7 +97,7 @@ async def on_startup(dp):
         logger.info("Планировщик уведомлений запущен")
 
         # Очищаем старые данные (старше 30 дней)
-        from storage import user_storage
+        from app.user_storage import user_storage
 
         cleaned_count = user_storage.cleanup_old_data(30)
         logger.info(f"Очищено {cleaned_count} старых записей")

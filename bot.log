@@ -429,3 +429,21 @@ reply_markup
 2025-09-27 11:08:15,924 - aiogram.dispatcher - INFO - Start polling
 2025-09-27 11:08:15,926 - scheduler - INFO - Планировщик уведомлений запущен (время отправки: 9:00)
 2025-09-27 11:08:16,120 - aiogram.dispatcher - INFO - Run polling for bot @ezoteric_test_dev_bot id=8367480117 - 'ezoteric_test_dev_bot'
+2025-09-27 17:59:02,822 - __main__ - INFO - Обработчики зарегистрированы
+2025-09-27 17:59:03,069 - __main__ - INFO - Бот запущен!
+2025-09-27 17:59:03,323 - __main__ - INFO - Планировщик уведомлений запущен
+2025-09-27 17:59:03,323 - storage - INFO - Нет неактивных пользователей для удаления
+2025-09-27 17:59:03,323 - __main__ - INFO - Очищено None старых записей
+2025-09-27 17:59:03,323 - aiogram.dispatcher - INFO - Start polling
+2025-09-27 17:59:03,323 - scheduler - INFO - Планировщик уведомлений запущен (время отправки: 9:00)
+2025-09-27 17:59:03,527 - aiogram.dispatcher - INFO - Run polling for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'
+2025-09-27 17:59:28,167 - storage - INFO - Создан новый пользователь: 1512454100
+2025-09-27 17:59:28,167 - handlers - INFO - Пользователь 1512454100 запустил бота
+2025-09-27 17:59:28,395 - aiogram.event - INFO - Update id=221272043 is handled. Duration 218 ms by bot id=7651594720
+2025-09-27 17:59:33,143 - aiogram.event - INFO - Update id=221272044 is handled. Duration 77 ms by bot id=7651594720
+2025-09-27 17:59:36,638 - aiogram.event - INFO - Update id=221272045 is handled. Duration 139 ms by bot id=7651594720
+2025-09-27 18:11:24,856 - aiogram.dispatcher - INFO - Polling stopped
+2025-09-27 18:11:25,106 - __main__ - INFO - Бот остановлен!
+2025-09-27 18:11:25,356 - scheduler - INFO - Планировщик уведомлений остановлен
+2025-09-27 18:11:25,357 - __main__ - INFO - Планировщик уведомлений остановлен
+2025-09-27 18:11:25,358 - aiogram.dispatcher - INFO - Polling stopped for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'
