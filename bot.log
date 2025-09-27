@@ -421,3 +421,11 @@ reply_markup
 2025-09-26 22:55:25,706 - aiogram.dispatcher - INFO - Run polling for bot @ezoteric_test_dev_bot id=8367480117 - 'ezoteric_test_dev_bot'
 2025-09-26 22:55:47,139 - handlers - INFO - Пользователь 627875032 запустил бота
 2025-09-26 22:55:47,359 - aiogram.event - INFO - Update id=567057129 is handled. Duration 219 ms by bot id=8367480117
+2025-09-27 11:08:15,282 - __main__ - INFO - Обработчики зарегистрированы
+2025-09-27 11:08:15,616 - __main__ - INFO - Бот запущен!
+2025-09-27 11:08:15,907 - __main__ - INFO - Планировщик уведомлений запущен
+2025-09-27 11:08:15,924 - storage - INFO - Нет неактивных пользователей для удаления
+2025-09-27 11:08:15,924 - __main__ - INFO - Очищено None старых записей
+2025-09-27 11:08:15,924 - aiogram.dispatcher - INFO - Start polling
+2025-09-27 11:08:15,926 - scheduler - INFO - Планировщик уведомлений запущен (время отправки: 9:00)
+2025-09-27 11:08:16,120 - aiogram.dispatcher - INFO - Run polling for bot @ezoteric_test_dev_bot id=8367480117 - 'ezoteric_test_dev_bot'
