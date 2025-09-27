@@ -1,0 +1,51 @@
+[tool.black]
+line-length = 104
+target-version = ['py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.venv
+  | venv
+  | __pycache__
+  | migrations
+)/
+'''
+
+[tool.isort]
+profile = "black"                     # Использовать настройки совместимые с Black
+multi_line_output = 3                 # Переносить импорты с скобках (вертикально)
+include_trailing_comma = true         # Добавлять запятую после последнего импорта
+force_grid_wrap = 0                   # Не форсировать перенос на новую строку
+use_parentheses = true                # Использовать скобки для переноса импортов
+line_length = 104                      # Максимальная длина строки (как в Black)
+known_first_party = ["app", "core", "handlers"]  # Ваши локальные модули
+remove_redundant_aliases = true       # Удалять избыточные алиасы (import os as os)
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.poe.tasks]
+# Основные команды
+run = "python app/main.py"
+install = "pip install -r requirements.txt"
+dev-install = "pip install -r requirements-dev.txt"
+update = "pip install --upgrade -r requirements.txt"
+venv = "python -m venv venv"
+
+# Форматирование кода
+format = "autoflake . --remove-all-unused-imports --recursive --in-place --ignore-init-module-imports"
+black = "python -m black ."
+isort = "python -m isort ."
+
+# Линтинг
+lint = "python -m flake8 . --max-line-length=104 --ignore=E501"
+quick-lint = "python -m flake8 . --select=E9,F63,F7,F82 --exit-zero"
+
+# Очистка
+clean = "find . -name '*.pyc' -delete && find . -name '__pycache__' -exec rm -rf {} +"
+
+# Составные задачи
+setup = { sequence = ["install", "run"] }
+full-check = { sequence = ["format", "isort", "black"] }
+restart = { sequence = ["clean", "run"] }

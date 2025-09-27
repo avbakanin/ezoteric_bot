@@ -26,6 +26,8 @@ python -m venv venv
 # Активация (выберите вашу ОС)
 source venv/bin/activate      # Linux/Mac
 # или
+source venv/Scripts/activate
+# или
 venv\Scripts\activate        # Windows
 
 # Основные зависимости

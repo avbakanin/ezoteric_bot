@@ -1,3 +1,86 @@
+# Виртуальное окружение
+venv/
+env/
+.venv/
+ENV/
+
+# Файлы настроек с чувствительными данными
+config.py
 .env
-/venv
+.env.local
+.env.production
+.env.development
+*.env
+
+# Кэш Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Распределенные файлы и установки
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Логи и системные файлы
 bot.log
+*.log
+logs/
+.pytest_cache/
+.coverage
+.coverage.*
+
+# Файлы операционной системы
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Файлы редакторов
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Резервные копии и временные файлы
+*.bak
+*.tmp
+*.temp
+
+# Базы данных (если используются)
+*.db
+*.sqlite
+*.sqlite3
+
+# Файлы сессий и кэша
+session/
+cache/
+temp/
+
+# Миграции (если используется БД с миграциями)
+migrations/
+
+# Файлы для конкретно Telegram бота
+# Уберите комментарий, если используете эти файлы:
+# webhook_cert.pem
+# webhook_pkey.pem
+
+# Файлы для деплоя
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Файлы для специфичных сервисов
+.elasticbeanstalk/
+.vercel/
+.netlify
+
+# Файлы для мониторинга
+sentry.io

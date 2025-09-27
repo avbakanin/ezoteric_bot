@@ -1,0 +1,37 @@
+# name: CI/CD
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+
+#       - name: Set up Python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: '3.11'
+
+#       - name: Install dependencies
+#         run: pip install -r requirements.txt
+
+#       - name: Format code
+#         run: poe format
+
+#       - name: Deploy via SSH
+#         uses: appleboy/ssh-action@v0.1.10
+#         with:
+#           host: ${{ secrets.SSH_HOST }}
+#           username: ${{ secrets.SSH_USER }}
+#           key: ${{ secrets.SSH_KEY }}
+#           script: |
+#             cd /path/to/project
+#             git pull
+#             source venv/bin/activate
+#             pip install -r requirements.txt
+#             sudo systemctl restart bot
