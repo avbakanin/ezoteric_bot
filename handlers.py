@@ -151,9 +151,67 @@ async def calculate_number_command(message: types.Message, state: FSMContext):
         user_id = message.from_user.id
         logger.info(f"Пользователь {user_id} запросил расчет числа судьбы")
         
+        # Получаем данные пользователя
+        user_data = user_storage.get_user(user_id)
+        saved_birth_date = user_data.get("birth_date")
+        
+        # Проверяем кэш
+        cached_result = user_storage.get_cached_result(user_id)
+        
+        if saved_birth_date and cached_result and cached_result.get("birth_date") == saved_birth_date:
+            # Есть сохраненная дата и кэшированный результат
+            if user_storage.can_view_cached_result(user_id):
+                # Показываем кэшированный результат сразу
+                life_path = cached_result["life_path_result"]
+                text = get_text(life_path, "life_path", user_id)
+                
+                result_text = (
+                    f"🔮 ВАШЕ ЧИСЛО СУДЬБЫ: {life_path}\n\n"
+                    f"{text}\n\n"
+                    f"📅 Дата: {saved_birth_date}\n"
+                    f"💡 Вы можете рассчитать число для другой даты или повторно просмотреть этот результат"
+                )
+                
+                await message.answer(result_text, reply_markup=get_result_keyboard())
+                user_storage.increment_repeat_view(user_id)
+                logger.info(f"Показан кэшированный результат для пользователя {user_id}")
+                return
+            else:
+                # Превышен лимит повторных просмотров
+                await message.answer(
+                    "❌ Превышен лимит повторных просмотров на сегодня.\n"
+                    "Вы можете рассчитать число для новой даты или попробуйте завтра.",
+                    reply_markup=get_back_to_main_keyboard()
+                )
+                return
+        
+        # Проверяем лимит новых запросов
+        if not user_storage.can_make_request(user_id):
+            await message.answer(
+                "❌ Превышен дневной лимит запросов (2 в день для бесплатных пользователей).\n"
+                "Попробуйте завтра или оформите подписку для безлимитного доступа.",
+                reply_markup=get_back_to_main_keyboard()
+            )
+            return
+        
+        if saved_birth_date:
+            # Есть сохраненная дата, предлагаем варианты
+            message_text = (
+                f"📅 Ваша сохраненная дата рождения: {saved_birth_date}\n\n"
+                f"Выберите действие:\n"
+                f"• Введите новую дату в формате ДД.ММ.ГГГГ для расчета\n"
+                f"• Или введите '{saved_birth_date}' для расчета по сохраненной дате"
+            )
+        else:
+            # Нет сохраненной даты
+            message_text = (
+                "Введите дату рождения в формате ДД.ММ.ГГГГ\n"
+                "(например, 15.05.1990)\n\n"
+                "💡 Вы можете рассчитать число для любой даты"
+            )
+        
         await message.answer(
-            "Введите вашу дату рождения в формате ДД.ММ.ГГГГ\n"
-            "(например, 15.05.1990)",
+            message_text,
             reply_markup=get_back_to_main_keyboard()
         )
         await state.set_state(UserStates.waiting_for_birth_date)
@@ -197,18 +255,70 @@ async def handle_birth_date(message: types.Message, state: FSMContext):
                 "❌ Неверный формат даты. Пожалуйста, введите дату в формате ДД.ММ.ГГГГ\n"
                 "Например: 15.03.1990"
             )
-        return
-    
-        # Сохраняем дату рождения
-        user_storage.set_birth_date(user_id, birth_date)
+            return
+        
+        # Проверяем кэш для той же даты рождения
+        cached_result = user_storage.get_cached_result(user_id)
+        if cached_result and cached_result.get("birth_date") == birth_date:
+            # Результат уже есть в кэше для этого дня
+            if user_storage.can_view_cached_result(user_id):
+                life_path = cached_result["life_path_result"]
+                text = get_text(life_path, "life_path", user_id)
+                
+                result_text = (
+                    f"🔮 ВАШЕ ЧИСЛО СУДЬБЫ: {life_path}\n\n"
+                    f"{text}\n\n"
+                    f"📋 Это результат из кэша (повторный просмотр)"
+                )
+                
+                await message.answer(result_text, reply_markup=get_result_keyboard())
+                user_storage.increment_repeat_view(user_id)
+                await state.clear()
+                logger.info(f"Показан кэшированный результат для пользователя {user_id}")
+                return
+            else:
+                await message.answer(
+                    "❌ Превышен лимит повторных просмотров на сегодня.\n"
+                    "Попробуйте завтра или оформите подписку для безлимитного доступа.",
+                    reply_markup=get_back_to_main_keyboard()
+                )
+                return
+        
+        # Проверяем лимит новых запросов
+        if not user_storage.can_make_request(user_id):
+            await message.answer(
+                "❌ Превышен дневной лимит запросов (2 в день для бесплатных пользователей).\n"
+                "Попробуйте завтра или оформите подписку для безлимитного доступа.",
+                reply_markup=get_back_to_main_keyboard()
+            )
+            return
+        
+        # Сохраняем дату рождения только если это новая дата
+        user_data = user_storage.get_user(user_id)
+        if user_data.get("birth_date") != birth_date:
+            user_storage.set_birth_date(user_id, birth_date)
         
         # Вычисляем число судьбы
         life_path = calculate_life_path_number(birth_date)
+        soul_number = calculate_soul_number(birth_date)
+        
+        # Сохраняем результат в кэш
+        user_storage.save_daily_result(user_id, birth_date, life_path, soul_number)
+        
+        # Увеличиваем счетчик запросов
+        user_storage.increment_usage(user_id, "daily")
+        
         text = get_text(life_path, "life_path", user_id)
+        
+        # Определяем, была ли это новая дата
+        was_new_date = user_data.get("birth_date") != birth_date
+        date_status = "новая дата" if was_new_date else "сохраненная дата"
         
         result_text = (
             f"🔮 ВАШЕ ЧИСЛО СУДЬБЫ: {life_path}\n\n"
-            f"{text}"
+            f"{text}\n\n"
+            f"📅 Дата: {birth_date} ({date_status})\n"
+            f"💡 Вы можете повторно просмотреть этот результат в течение дня"
         )
         
         await message.answer(result_text, reply_markup=get_result_keyboard())
@@ -315,11 +425,26 @@ async def profile_command(message: types.Message):
     birth_date = user_data.get("birth_date", "не указана")
     life_path_number = user_data.get("life_path_number", "не рассчитано")
     
+    # Получаем статистику использования
+    usage_stats = user_storage.get_usage_stats(user_id)
+    
+    # Определяем статус подписки
+    subscription_status = "Premium" if user_data["subscription"]["active"] else "Бесплатный"
+    
+    # Проверяем кэш
+    cached_result = user_storage.get_cached_result(user_id)
+    has_cached = cached_result is not None
+    
     profile_text = (
         f"📊 ВАШ ПРОФИЛЬ:\n\n"
         f"🆔 Ваш ID: {user_id}\n"
         f"🔢 Ваше Число Судьбы: {life_path_number}\n"
-        f"💎 Статус: Бесплатный аккаунт"
+        f"💎 Статус: {subscription_status} аккаунт\n\n"
+        f"📈 СТАТИСТИКА НА СЕГОДНЯ:\n"
+        f"• Запросов: {usage_stats['daily_requests']}/2\n"
+        f"• Повторных просмотров: {usage_stats['repeat_views']}/5\n"
+        f"• Проверок совместимости: {usage_stats['compatibility_checks']}/1\n\n"
+        f"💾 Кэш результатов: {'✅ Есть' if has_cached else '❌ Нет'}"
     )
     
     has_calculated = birth_date != "не указана"
@@ -439,9 +564,73 @@ async def handle_callback_query(callback_query: CallbackQuery):
             reply_markup=get_back_to_main_keyboard()
         )
     elif callback_query.data == "calculate_number":
+        # Обработчик для кнопки "Рассчитать число" из профиля
+        user_id = callback_query.from_user.id
+        
+        # Получаем данные пользователя
+        user_data = user_storage.get_user(user_id)
+        saved_birth_date = user_data.get("birth_date")
+        
+        # Проверяем кэш
+        cached_result = user_storage.get_cached_result(user_id)
+        
+        if saved_birth_date and cached_result and cached_result.get("birth_date") == saved_birth_date:
+            # Есть сохраненная дата и кэшированный результат
+            if user_storage.can_view_cached_result(user_id):
+                # Показываем кэшированный результат сразу
+                life_path = cached_result["life_path_result"]
+                text = get_text(life_path, "life_path", user_id)
+                
+                result_text = (
+                    f"🔮 ВАШЕ ЧИСЛО СУДЬБЫ: {life_path}\n\n"
+                    f"{text}\n\n"
+                    f"📅 Дата: {saved_birth_date}\n"
+                    f"💡 Вы можете рассчитать число для другой даты или повторно просмотреть этот результат"
+                )
+                
+                await callback_query.message.edit_text(
+                    result_text,
+                    reply_markup=get_result_keyboard()
+                )
+                user_storage.increment_repeat_view(user_id)
+                logger.info(f"Показан кэшированный результат для пользователя {user_id}")
+                return
+            else:
+                # Превышен лимит повторных просмотров
+                await callback_query.message.edit_text(
+                    "❌ Превышен лимит повторных просмотров на сегодня.\n"
+                    "Вы можете рассчитать число для новой даты или попробуйте завтра.",
+                    reply_markup=get_back_to_main_keyboard()
+                )
+                return
+        
+        # Проверяем лимит новых запросов
+        if not user_storage.can_make_request(user_id):
+            await callback_query.message.edit_text(
+                "❌ Превышен дневной лимит запросов (2 в день для бесплатных пользователей).\n"
+                "Попробуйте завтра или оформите подписку для безлимитного доступа.",
+                reply_markup=get_back_to_main_keyboard()
+            )
+            return
+        
+        if saved_birth_date:
+            # Есть сохраненная дата, предлагаем варианты
+            message_text = (
+                f"📅 Ваша сохраненная дата рождения: {saved_birth_date}\n\n"
+                f"Выберите действие:\n"
+                f"• Введите новую дату в формате ДД.ММ.ГГГГ для расчета\n"
+                f"• Или введите '{saved_birth_date}' для расчета по сохраненной дате"
+            )
+        else:
+            # Нет сохраненной даты
+            message_text = (
+                "Введите дату рождения в формате ДД.ММ.ГГГГ\n"
+                "(например, 15.05.1990)\n\n"
+                "💡 Вы можете рассчитать число для любой даты"
+            )
+        
         await callback_query.message.edit_text(
-            "Введите вашу дату рождения в формате ДД.ММ.ГГГГ\n"
-            "(например, 15.05.1990)",
+            message_text,
             reply_markup=get_back_to_main_keyboard()
         )
         await state.set_state(UserStates.waiting_for_birth_date)
@@ -452,6 +641,48 @@ async def handle_callback_query(callback_query: CallbackQuery):
             reply_markup=get_back_to_main_keyboard()
         )
         await state.set_state(UserStates.waiting_for_birth_date)
+    elif callback_query.data == "view_again":
+        # Обработчик для повторного просмотра результата
+        user_id = callback_query.from_user.id
+        
+        # Проверяем кэш
+        cached_result = user_storage.get_cached_result(user_id)
+        if not cached_result:
+            await callback_query.message.edit_text(
+                "❌ Нет сохраненных результатов для повторного просмотра.\n"
+                "Рассчитайте ваше число судьбы сначала.",
+                reply_markup=get_back_to_main_keyboard()
+            )
+            return
+        
+        # Проверяем лимит повторных просмотров
+        if not user_storage.can_view_cached_result(user_id):
+            await callback_query.message.edit_text(
+                "❌ Превышен лимит повторных просмотров на сегодня.\n"
+                "Попробуйте завтра или оформите подписку для безлимитного доступа.",
+                reply_markup=get_back_to_main_keyboard()
+            )
+            return
+        
+        # Показываем кэшированный результат
+        life_path = cached_result["life_path_result"]
+        text = get_text(life_path, "life_path", user_id)
+        
+        result_text = (
+            f"🔮 ВАШЕ ЧИСЛО СУДЬБЫ: {life_path}\n\n"
+            f"{text}\n\n"
+            f"📋 Это результат из кэша (повторный просмотр)"
+        )
+        
+        await callback_query.message.edit_text(
+            result_text,
+            reply_markup=get_result_keyboard()
+        )
+        
+        # Увеличиваем счетчик повторных просмотров
+        user_storage.increment_repeat_view(user_id)
+        
+        logger.info(f"Показан повторный результат для пользователя {user_id}")
     elif callback_query.data == "premium_info":
         await callback_query.message.edit_text(
             "💎 PREMIUM ПОДПИСКА\n\n"

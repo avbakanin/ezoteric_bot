@@ -33,8 +33,9 @@ class BotConfig:
         self.NOTIFICATION_TIME = os.getenv('NOTIFICATION_TIME', '09:00')
         
         # Лимиты для бесплатных пользователей
-        self.FREE_DAILY_LIMIT = int(os.getenv('FREE_DAILY_LIMIT', '3'))
+        self.FREE_DAILY_LIMIT = int(os.getenv('FREE_DAILY_LIMIT', '2'))  # Уменьшено до 2 запросов в день
         self.FREE_COMPATIBILITY_LIMIT = int(os.getenv('FREE_COMPATIBILITY_LIMIT', '1'))
+        self.FREE_REPEAT_VIEWS_LIMIT = int(os.getenv('FREE_REPEAT_VIEWS_LIMIT', '5'))  # Лимит повторных просмотров
         
         # Настройки подписки
         self.SUBSCRIPTION_PRICE = int(os.getenv('SUBSCRIPTION_PRICE', '299'))
@@ -63,6 +64,7 @@ class BotConfig:
             'NOTIFICATION_TIME': self.NOTIFICATION_TIME,
             'FREE_DAILY_LIMIT': self.FREE_DAILY_LIMIT,
             'FREE_COMPATIBILITY_LIMIT': self.FREE_COMPATIBILITY_LIMIT,
+            'FREE_REPEAT_VIEWS_LIMIT': self.FREE_REPEAT_VIEWS_LIMIT,
             'SUBSCRIPTION_PRICE': self.SUBSCRIPTION_PRICE,
             'SUBSCRIPTION_DURATION': self.SUBSCRIPTION_DURATION,
             'MAX_MESSAGE_LENGTH': self.MAX_MESSAGE_LENGTH,
@@ -83,6 +85,7 @@ DATABASE_URL = config.DATABASE_URL
 NOTIFICATION_TIME = config.NOTIFICATION_TIME
 FREE_DAILY_LIMIT = config.FREE_DAILY_LIMIT
 FREE_COMPATIBILITY_LIMIT = config.FREE_COMPATIBILITY_LIMIT
+FREE_REPEAT_VIEWS_LIMIT = config.FREE_REPEAT_VIEWS_LIMIT
 SUBSCRIPTION_PRICE = config.SUBSCRIPTION_PRICE
 SUBSCRIPTION_DURATION = config.SUBSCRIPTION_DURATION
 MAX_MESSAGE_LENGTH = config.MAX_MESSAGE_LENGTH

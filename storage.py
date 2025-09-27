@@ -80,7 +80,15 @@ class UserStorage:
                     "usage_stats": {
                         "daily_requests": 0,
                         "compatibility_checks": 0,
+                        "repeat_views": 0,  # Счетчик повторных просмотров
                         "last_reset": datetime.now().strftime("%Y-%m-%d")
+                    },
+                    "daily_cache": {  # Кэш результатов на день
+                        "date": None,
+                        "life_path_result": None,
+                        "soul_number_result": None,
+                        "daily_number_result": None,
+                        "birth_date": None
                     },
                     "notifications": {
                         "enabled": True,
@@ -145,14 +153,23 @@ class UserStorage:
         if usage_stats["last_reset"] != today:
             usage_stats["daily_requests"] = 0
             usage_stats["compatibility_checks"] = 0
+            usage_stats["repeat_views"] = 0
             usage_stats["last_reset"] = today
+            # Очищаем кэш при смене дня
+            user_data["daily_cache"] = {
+                "date": None,
+                "life_path_result": None,
+                "soul_number_result": None,
+                "daily_number_result": None,
+                "birth_date": None
+            }
             self._save_data()
         
         # Проверяем лимиты
         if user_data["subscription"]["active"]:
             return True  # Подписчики без ограничений
         
-        return usage_stats["daily_requests"] < 3  # Лимит для бесплатных пользователей
+        return usage_stats["daily_requests"] < 2  # Уменьшенный лимит для бесплатных пользователей
     
     def can_check_compatibility(self, user_id: int) -> bool:
         """
@@ -166,7 +183,16 @@ class UserStorage:
         if usage_stats["last_reset"] != today:
             usage_stats["daily_requests"] = 0
             usage_stats["compatibility_checks"] = 0
+            usage_stats["repeat_views"] = 0
             usage_stats["last_reset"] = today
+            # Очищаем кэш при смене дня
+            user_data["daily_cache"] = {
+                "date": None,
+                "life_path_result": None,
+                "soul_number_result": None,
+                "daily_number_result": None,
+                "birth_date": None
+            }
             self._save_data()
         
         # Проверяем лимиты
@@ -201,12 +227,22 @@ class UserStorage:
         if usage_stats["last_reset"] != today:
             usage_stats["daily_requests"] = 0
             usage_stats["compatibility_checks"] = 0
+            usage_stats["repeat_views"] = 0
             usage_stats["last_reset"] = today
+            # Очищаем кэш при смене дня
+            user_data["daily_cache"] = {
+                "date": None,
+                "life_path_result": None,
+                "soul_number_result": None,
+                "daily_number_result": None,
+                "birth_date": None
+            }
             self._save_data()
         
         return {
             "daily_requests": usage_stats["daily_requests"],
             "compatibility_checks": usage_stats["compatibility_checks"],
+            "repeat_views": usage_stats["repeat_views"],
             "subscription_active": user_data["subscription"]["active"]
         }
     
@@ -297,6 +333,56 @@ class UserStorage:
         user_data = self.get_user(user_id)
         user_data["last_daily_notification"] = datetime.now().strftime("%Y-%m-%d")
         self._save_data()
+    
+    def can_view_cached_result(self, user_id: int) -> bool:
+        """
+        Проверяет, может ли пользователь просмотреть кэшированный результат
+        """
+        user_data = self.get_user(user_id)
+        usage_stats = user_data["usage_stats"]
+        
+        # Подписчики могут смотреть без ограничений
+        if user_data["subscription"]["active"]:
+            return True
+        
+        # Проверяем лимит повторных просмотров
+        return usage_stats["repeat_views"] < 5
+    
+    def increment_repeat_view(self, user_id: int):
+        """
+        Увеличивает счетчик повторных просмотров
+        """
+        user_data = self.get_user(user_id)
+        user_data["usage_stats"]["repeat_views"] += 1
+        self._save_data()
+    
+    def save_daily_result(self, user_id: int, birth_date: str, life_path: int, soul_number: int):
+        """
+        Сохраняет результат расчета в кэш на день
+        """
+        user_data = self.get_user(user_id)
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        user_data["daily_cache"] = {
+            "date": today,
+            "birth_date": birth_date,
+            "life_path_result": life_path,
+            "soul_number_result": soul_number,
+            "daily_number_result": None  # Будет рассчитано при запросе
+        }
+        self._save_data()
+    
+    def get_cached_result(self, user_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Получает кэшированный результат для сегодняшнего дня
+        """
+        user_data = self.get_user(user_id)
+        cache = user_data.get("daily_cache", {})
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        if cache.get("date") == today:
+            return cache
+        return None
     
     def cleanup_old_data(self, days: int = 30):
         """

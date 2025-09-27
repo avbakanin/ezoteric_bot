@@ -28,6 +28,7 @@ def get_result_keyboard() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="🔒 Полная расшифровка (Премиум)", callback_data="premium_full")],
+            [InlineKeyboardButton(text="📋 Посмотреть снова", callback_data="view_again")],
             [InlineKeyboardButton(text="↩️ В главное меню", callback_data="back_main")]
         ]
     )
@@ -51,16 +52,9 @@ def get_profile_keyboard(has_calculated: bool = False) -> InlineKeyboardMarkup:
     """
     Создает клавиатуру для профиля пользователя
     """
-    if has_calculated:
-        button_text = "🔄 Рассчитать заново"
-        callback_data = "recalculate"
-    else:
-        button_text = "🧮 Рассчитать моё число"
-        callback_data = "calculate_number"
-    
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text=button_text, callback_data=callback_data)],
+            [InlineKeyboardButton(text="🧮 Рассчитать число", callback_data="calculate_number")],
             [InlineKeyboardButton(text="↩️ В главное меню", callback_data="back_main")]
         ]
     )
