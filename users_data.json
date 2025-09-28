@@ -1,52 +1,39 @@
 {
-  "627875032": {
-    "birth_date": null,
-    "life_path_number": null,
-    "soul_number": null,
+  "1512454100": {
+    "birth_date": "10.09.2021",
+    "life_path_number": 6,
+    "soul_number": 1,
     "subscription": {
       "active": false,
       "expires": null,
       "type": "free"
     },
     "usage_stats": {
-      "daily_requests": 0,
+      "daily_requests": 2,
       "compatibility_checks": 0,
-      "last_reset": "2025-09-26"
+      "repeat_views": 10,
+      "last_reset": "2025-09-28"
     },
-    "notifications": {
-      "enabled": true,
-      "time": "09:00"
-    },
-    "text_history": [],
-    "last_daily_notification": null,
-    "created_at": "2025-09-26 22:27:40",
-    "last_activity": "2025-09-26 22:27:40"
-  },
-  "12345": {
-    "birth_date": null,
-    "life_path_number": null,
-    "soul_number": null,
-    "subscription": {
-      "active": false,
-      "expires": null,
-      "type": "free"
-    },
-    "usage_stats": {
-      "daily_requests": 0,
-      "compatibility_checks": 0,
-      "last_reset": "2025-09-26"
+    "daily_cache": {
+      "date": "2025-09-28",
+      "birth_date": "10.09.2021",
+      "life_path_result": 6,
+      "soul_number_result": 1,
+      "daily_number_result": null
     },
     "notifications": {
       "enabled": true,
       "time": "09:00"
     },
     "text_history": [
-      "Test text 1",
-      "Test text 2"
+      "Ваше число судьбы 2 означает, что вы - душа любой компании. Люди тянутся к вам за советом и поддержкой.",
+      "Число судьбы 6 наделяет вас даром воспитания и заботы. Вы умеете создавать уют и комфорт для окружающих.",
+      "Шестерка - это число любви и заботы. Вы призваны быть источником тепла и поддержки для окружающих.",
+      "Число 6 дает вам дар исцеления и утешения. Вы умеете залечивать душевные раны и приносить покой.",
+      "Ваша кармическая задача - научиться заботиться о других, не забывая о собственных потребностях."
     ],
     "last_daily_notification": null,
-    "created_at": "2025-09-26 22:52:33",
-    "last_activity": "2025-09-26 22:53:11",
-    "name": "Test User"
+    "created_at": "2025-09-28 11:20:40",
+    "last_activity": "2025-09-28 11:52:27"
   }
 }

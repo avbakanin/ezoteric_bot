@@ -164,7 +164,7 @@ async def handle_birth_date(message: types.Message, state: FSMContext):
     logger.info(f"Пользователь {user_id} ввел дату рождения: {birth_date}")
 
     # rate limit и валидация
-    if not security_validator.rate_limit_check(user_id, "birth_date", limit=5, window=300):
+    if not security_validator.rate_limit_check(user_id, "birth_date"):
         await message.answer(
             MESSAGES["RATE_LIMIT_BIRTH_DATE_MSG"], reply_markup=get_back_to_main_keyboard()
         )
@@ -333,7 +333,7 @@ async def handle_feedback(message: types.Message, state: FSMContext):
     feedback_text = message.text.strip()
     user_id = message.from_user.id
 
-    if not security_validator.rate_limit_check(user_id, "feedback", limit=3, window=3600):
+    if not security_validator.rate_limit_check(user_id, "feedback"):
         await message.answer(
             "⏰ Слишком много отзывов. Подождите час.", reply_markup=get_back_to_main_keyboard()
         )
@@ -357,7 +357,7 @@ async def handle_diary_observation(message: types.Message, state: FSMContext):
     observation_text = message.text.strip()
     user_id = message.from_user.id
 
-    if not security_validator.rate_limit_check(user_id, "diary", limit=10, window=3600):
+    if not security_validator.rate_limit_check(user_id, "diary"):
         await message.answer(
             "⏰ Слишком много записей в дневник. Подождите час.",
             reply_markup=get_back_to_main_keyboard(),
