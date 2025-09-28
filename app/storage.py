@@ -21,7 +21,7 @@ class UserStorage:
 
         # Определяем путь относительно расположения этого файла
         base_dir = Path(__file__).parent
-        self.storage_file = base_dir / "app" / storage_file
+        self.storage_file = base_dir / storage_file
 
         self.data = self._load_data()
 
