@@ -461,3 +461,123 @@ or mount method to a bot instance `method.as_(bot)` and then call it `await meth
 2025-09-28 16:31:06,098 - scheduler - INFO - Планировщик уведомлений остановлен
 2025-09-28 16:31:06,099 - __main__ - INFO - Планировщик уведомлений остановлен
 2025-09-28 16:31:06,101 - aiogram.dispatcher - INFO - Polling stopped for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'
+2025-09-28 16:32:42,904 - __main__ - INFO - Обработчики зарегистрированы
+2025-09-28 16:32:43,164 - __main__ - INFO - Бот запущен!
+2025-09-28 16:32:43,405 - __main__ - INFO - Планировщик уведомлений запущен
+2025-09-28 16:32:43,405 - __main__ - ERROR - Ошибка при запуске бота: 'UserStorage' object has no attribute 'cleanup_old_data'
+2025-09-28 16:32:43,406 - aiogram.dispatcher - INFO - Start polling
+2025-09-28 16:32:43,406 - scheduler - INFO - Планировщик уведомлений запущен (время отправки: 9:00)
+2025-09-28 16:32:43,575 - aiogram.dispatcher - INFO - Run polling for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'
+2025-09-28 16:32:44,010 - aiogram.event - INFO - Update id=221272178 is handled. Duration 296 ms by bot id=7651594720
+2025-09-28 16:32:49,022 - aiogram.event - INFO - Update id=221272179 is handled. Duration 109 ms by bot id=7651594720
+2025-09-28 16:32:57,545 - aiogram.event - INFO - Update id=221272180 is handled. Duration 93 ms by bot id=7651594720
+2025-09-28 16:33:11,471 - aiogram.event - INFO - Update id=221272181 is handled. Duration 235 ms by bot id=7651594720
+2025-09-28 16:33:14,707 - aiogram.event - INFO - Update id=221272182 is handled. Duration 141 ms by bot id=7651594720
+2025-09-28 16:33:35,740 - decorators - ERROR - Ошибка в about_command: 1 validation error for SendMessage
+text
+  Input should be a valid string [type=string_type, input_value=('Это нумероло...обы начать!',), input_type=tuple]
+    For further information visit https://errors.pydantic.dev/2.5/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\ezoteric_bot\app\decorators.py", line 19, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\ezoteric_bot\app\handlers\handlers.py", line 280, in about_command
+    await message.answer(MESSAGES["ABOUT_DESCRIPTION"], reply_markup=get_about_keyboard())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\ezoteric_bot\venv\Lib\site-packages\aiogram\types\message.py", line 1725, in answer
+    return SendMessage(
+           ^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\ezoteric_bot\venv\Lib\site-packages\pydantic\main.py", line 164, in __init__
+    __pydantic_self__.__pydantic_validator__.validate_python(data, self_instance=__pydantic_self__)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for SendMessage
+text
+  Input should be a valid string [type=string_type, input_value=('Это нумероло...обы начать!',), input_type=tuple]
+    For further information visit https://errors.pydantic.dev/2.5/v/string_type
+2025-09-28 16:33:35,931 - aiogram.event - INFO - Update id=221272183 is handled. Duration 203 ms by bot id=7651594720
+2025-09-28 16:36:45,283 - aiogram.dispatcher - INFO - Polling stopped
+2025-09-28 16:36:45,545 - __main__ - INFO - Бот остановлен!
+2025-09-28 16:36:45,778 - scheduler - INFO - Планировщик уведомлений остановлен
+2025-09-28 16:36:45,778 - __main__ - INFO - Планировщик уведомлений остановлен
+2025-09-28 16:36:45,779 - aiogram.dispatcher - INFO - Polling stopped for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'
+2025-09-28 16:36:58,495 - __main__ - INFO - Обработчики зарегистрированы
+2025-09-28 16:36:58,753 - __main__ - INFO - Бот запущен!
+2025-09-28 16:36:58,989 - __main__ - INFO - Планировщик уведомлений запущен
+2025-09-28 16:36:58,990 - __main__ - ERROR - Ошибка при запуске бота: 'UserStorage' object has no attribute 'cleanup_old_data'
+2025-09-28 16:36:58,990 - aiogram.dispatcher - INFO - Start polling
+2025-09-28 16:36:58,991 - scheduler - INFO - Планировщик уведомлений запущен (время отправки: 9:00)
+2025-09-28 16:36:59,169 - aiogram.dispatcher - INFO - Run polling for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'
+2025-09-28 16:37:08,496 - aiogram.event - INFO - Update id=221272184 is handled. Duration 328 ms by bot id=7651594720
+2025-09-28 16:37:19,813 - aiogram.event - INFO - Update id=221272185 is handled. Duration 78 ms by bot id=7651594720
+2025-09-28 16:41:21,236 - aiogram.dispatcher - INFO - Polling stopped
+2025-09-28 16:41:21,493 - __main__ - INFO - Бот остановлен!
+2025-09-28 16:41:21,730 - scheduler - INFO - Планировщик уведомлений остановлен
+2025-09-28 16:41:21,730 - __main__ - INFO - Планировщик уведомлений остановлен
+2025-09-28 16:41:21,731 - aiogram.dispatcher - INFO - Polling stopped for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'
+2025-09-28 16:41:25,995 - __main__ - INFO - Обработчики зарегистрированы
+2025-09-28 16:41:26,256 - __main__ - INFO - Бот запущен!
+2025-09-28 16:41:26,518 - __main__ - INFO - Планировщик уведомлений запущен
+2025-09-28 16:41:26,519 - __main__ - ERROR - Ошибка при запуске бота: 'UserStorage' object has no attribute 'cleanup_old_data'
+2025-09-28 16:41:26,519 - aiogram.dispatcher - INFO - Start polling
+2025-09-28 16:41:26,520 - scheduler - INFO - Планировщик уведомлений запущен (время отправки: 9:00)
+2025-09-28 16:41:26,701 - aiogram.dispatcher - INFO - Run polling for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'
+2025-09-28 16:41:28,611 - decorators - ERROR - Ошибка в about_command: 1 validation error for SendMessage
+text
+  Input should be a valid string [type=string_type, input_value=('Это нумероло...обы начать!',), input_type=tuple]
+    For further information visit https://errors.pydantic.dev/2.5/v/string_type
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\ezoteric_bot\app\decorators.py", line 19, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\ezoteric_bot\app\handlers\handlers.py", line 280, in about_command
+    await message.answer(MESSAGES["ABOUT_DESCRIPTION"], reply_markup=get_about_keyboard())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\ezoteric_bot\venv\Lib\site-packages\aiogram\types\message.py", line 1725, in answer
+    return SendMessage(
+           ^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\ezoteric_bot\venv\Lib\site-packages\pydantic\main.py", line 164, in __init__
+    __pydantic_self__.__pydantic_validator__.validate_python(data, self_instance=__pydantic_self__)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for SendMessage
+text
+  Input should be a valid string [type=string_type, input_value=('Это нумероло...обы начать!',), input_type=tuple]
+    For further information visit https://errors.pydantic.dev/2.5/v/string_type
+2025-09-28 16:41:28,883 - aiogram.event - INFO - Update id=221272186 is handled. Duration 282 ms by bot id=7651594720
+2025-09-28 16:44:12,597 - aiogram.dispatcher - INFO - Polling stopped
+2025-09-28 16:44:12,852 - __main__ - INFO - Бот остановлен!
+2025-09-28 16:44:13,087 - scheduler - INFO - Планировщик уведомлений остановлен
+2025-09-28 16:44:13,088 - __main__ - INFO - Планировщик уведомлений остановлен
+2025-09-28 16:44:13,089 - aiogram.dispatcher - INFO - Polling stopped for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'
+2025-09-28 16:44:15,654 - __main__ - INFO - Обработчики зарегистрированы
+2025-09-28 16:44:15,922 - __main__ - INFO - Бот запущен!
+2025-09-28 16:44:16,182 - __main__ - INFO - Планировщик уведомлений запущен
+2025-09-28 16:44:16,182 - __main__ - ERROR - Ошибка при запуске бота: 'UserStorage' object has no attribute 'cleanup_old_data'
+2025-09-28 16:44:16,183 - aiogram.dispatcher - INFO - Start polling
+2025-09-28 16:44:16,183 - scheduler - INFO - Планировщик уведомлений запущен (время отправки: 9:00)
+2025-09-28 16:44:16,337 - aiogram.dispatcher - INFO - Run polling for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'
+2025-09-28 16:44:17,694 - aiogram.event - INFO - Update id=221272187 is handled. Duration 219 ms by bot id=7651594720
+2025-09-28 16:44:22,546 - aiogram.event - INFO - Update id=221272188 is handled. Duration 125 ms by bot id=7651594720
+2025-09-28 16:49:34,486 - aiogram.event - INFO - Update id=221272189 is handled. Duration 187 ms by bot id=7651594720
+2025-09-28 16:49:42,344 - aiogram.event - INFO - Update id=221272190 is handled. Duration 235 ms by bot id=7651594720
+2025-09-28 16:49:44,520 - aiogram.event - INFO - Update id=221272191 is handled. Duration 141 ms by bot id=7651594720
+2025-09-28 16:49:46,342 - aiogram.event - INFO - Update id=221272192 is handled. Duration 235 ms by bot id=7651594720
+2025-09-28 16:53:09,735 - aiogram.dispatcher - INFO - Polling stopped
+2025-09-28 16:53:09,994 - __main__ - INFO - Бот остановлен!
+2025-09-28 16:53:10,233 - scheduler - INFO - Планировщик уведомлений остановлен
+2025-09-28 16:53:10,233 - __main__ - INFO - Планировщик уведомлений остановлен
+2025-09-28 16:53:10,235 - aiogram.dispatcher - INFO - Polling stopped for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'
+2025-09-28 16:53:12,799 - __main__ - INFO - Обработчики зарегистрированы
+2025-09-28 16:53:13,057 - __main__ - INFO - Бот запущен!
+2025-09-28 16:53:13,316 - __main__ - INFO - Планировщик уведомлений запущен
+2025-09-28 16:53:13,316 - __main__ - ERROR - Ошибка при запуске бота: 'UserStorage' object has no attribute 'cleanup_old_data'
+2025-09-28 16:53:13,317 - aiogram.dispatcher - INFO - Start polling
+2025-09-28 16:53:13,317 - scheduler - INFO - Планировщик уведомлений запущен (время отправки: 9:00)
+2025-09-28 16:53:13,518 - aiogram.dispatcher - INFO - Run polling for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'
+2025-09-28 16:53:21,474 - handlers.handlers - INFO - Пользователь 1512454100 запустил бота
+2025-09-28 16:53:21,915 - aiogram.event - INFO - Update id=221272193 is handled. Duration 437 ms by bot id=7651594720
+2025-09-28 16:53:32,349 - aiogram.event - INFO - Update id=221272194 is handled. Duration 108 ms by bot id=7651594720
+2025-09-28 16:53:37,193 - aiogram.event - INFO - Update id=221272195 is handled. Duration 94 ms by bot id=7651594720
+2025-09-28 16:53:44,924 - aiogram.event - INFO - Update id=221272196 is handled. Duration 77 ms by bot id=7651594720
+2025-09-28 17:01:28,976 - aiogram.dispatcher - INFO - Polling stopped
+2025-09-28 17:01:29,237 - __main__ - INFO - Бот остановлен!
+2025-09-28 17:01:29,470 - scheduler - INFO - Планировщик уведомлений остановлен
+2025-09-28 17:01:29,470 - __main__ - INFO - Планировщик уведомлений остановлен
+2025-09-28 17:01:29,472 - aiogram.dispatcher - INFO - Polling stopped for bot @DestinyDecoderBot id=7651594720 - 'ezoteric-bot-[DEV]'

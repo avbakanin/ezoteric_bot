@@ -20,7 +20,10 @@ def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
         keyboard=[
             [KeyboardButton(text="🧮 Рассчитать Число Судьбы")],
             [KeyboardButton(text="💑 Проверить Совместимость")],
-            [KeyboardButton(text="📊 Мой Профиль"), KeyboardButton(text="ℹ️ О боте")],
+            [KeyboardButton(text="📊 Мой Профиль")],
+            [KeyboardButton(text="ℹ️ О боте")],
+            [KeyboardButton(text="📔 Дневник наблюдений")],
+            [KeyboardButton(text="📝 Оставить отзыв")],
         ],
     )
     return keyboard
@@ -83,6 +86,19 @@ def get_about_keyboard() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="💎 Узнать о Premium", callback_data="premium_info")],
             [InlineKeyboardButton(text="📝 Оставить отзыв", callback_data="feedback")],
             [InlineKeyboardButton(text="📔 Дневник наблюдений", callback_data="diary_observation")],
+            [InlineKeyboardButton(text="↩️ В главное меню", callback_data="back_main")],
+        ]
+    )
+    return keyboard
+
+
+def get_feedback_keyboard() -> InlineKeyboardMarkup:
+    """
+    Создает клавиатуру для отправки отзывов.
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📝 Отправить отзыв", callback_data="feedback_send")],
             [InlineKeyboardButton(text="↩️ В главное меню", callback_data="back_main")],
         ]
     )
