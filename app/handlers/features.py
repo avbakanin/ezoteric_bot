@@ -15,8 +15,7 @@ from storage import user_storage
 async def affirmation_handler(callback_query: CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
-    number, text = get_affirmation()
-    user_storage.set_todays_affirmation(user_id, text, number)
+    _, text = get_affirmation(user_id)
     await callback_query.message.edit_text(f"✨ Твоя аффирмация:\n{text}")
 
 
@@ -59,5 +58,5 @@ async def calculate_number_handler(callback_query: CallbackQuery, state: FSMCont
         return
 
     # Нет сохраненной даты
-    await callback_query.message.edit_tex(MESSAGES["BASE_BIRTH_DATE_PROMPT"])
+    await callback_query.message.edit_text(MESSAGES["BASE_BIRTH_DATE_PROMPT"])
     await state.set_state(UserStates.waiting_for_birth_date)

@@ -1,8 +1,8 @@
 {
-  "627875032": {
-    "birth_date": null,
-    "life_path_number": null,
-    "soul_number": null,
+  "1512454100": {
+    "birth_date": "10.08.1922",
+    "life_path_number": 5,
+    "soul_number": 1,
     "subscription": {
       "active": false,
       "expires": null,
@@ -11,42 +11,92 @@
     "usage_stats": {
       "daily_requests": 0,
       "compatibility_checks": 0,
-      "last_reset": "2025-09-26"
+      "repeat_views": 0,
+      "last_reset": "2025-09-28",
+      "requests": 1
     },
-    "notifications": {
-      "enabled": true,
-      "time": "09:00"
-    },
-    "text_history": [],
-    "last_daily_notification": null,
-    "created_at": "2025-09-26 22:27:40",
-    "last_activity": "2025-09-26 22:27:40"
-  },
-  "12345": {
-    "birth_date": null,
-    "life_path_number": null,
-    "soul_number": null,
-    "subscription": {
-      "active": false,
-      "expires": null,
-      "type": "free"
-    },
-    "usage_stats": {
-      "daily_requests": 0,
-      "compatibility_checks": 0,
-      "last_reset": "2025-09-26"
+    "daily_cache": {
+      "date": null,
+      "life_path_result": null,
+      "soul_number_result": null,
+      "daily_number_result": null,
+      "birth_date": null
     },
     "notifications": {
       "enabled": true,
       "time": "09:00"
     },
     "text_history": [
-      "Test text 1",
-      "Test text 2"
+      "Число 11 сочетает энергию двойки и высшего интуитивного осознания. Вы способны соединять материальный мир с духовным.",
+      "Мастер-число 11 наделяет вас способностью видеть тонкие энергии и предугадывать события. Ваша миссия — вдохновлять и вести людей к осознанности.",
+      "Число судьбы 4 наделяет вас терпением и упорством. Вы умеете работать долго и упорно для достижения своих целей.",
+      "Ваша кармическая задача - научиться балансировать между работой и отдыхом, не забывая о духовном развитии.",
+      "Число судьбы 11 — мастер-число интуиции и духовного просветления. Вы призваны быть проводником света и вдохновения для других.",
+      "Вы обладаете даром духовного лидерства и озарений. Используйте его для созидания и помощи другим."
     ],
+    "affirmation_history": [],
     "last_daily_notification": null,
-    "created_at": "2025-09-26 22:52:33",
-    "last_activity": "2025-09-26 22:53:11",
-    "name": "Test User"
+    "created_at": "2025-09-28 16:07:59",
+    "last_activity": "2025-09-28 16:30:56",
+    "daily_results": [
+      {
+        "birth_date": "10.08.1991",
+        "life_path_result": 11,
+        "soul_number": 1,
+        "timestamp": "2025-09-28T16:08:05.456683"
+      },
+      {
+        "birth_date": "10.09.1992",
+        "life_path_result": 4,
+        "soul_number": 1,
+        "timestamp": "2025-09-28T16:23:38.309629"
+      },
+      {
+        "birth_date": "10.08.1991",
+        "life_path_result": 11,
+        "soul_number": 1,
+        "timestamp": "2025-09-28T16:28:48.712352"
+      },
+      {
+        "birth_date": "10.08.1922",
+        "life_path_result": 5,
+        "soul_number": 1,
+        "timestamp": "2025-09-28T16:30:56.961479"
+      }
+    ],
+    "repeat_views": 12
+  },
+  "7651594720": {
+    "birth_date": null,
+    "life_path_number": null,
+    "soul_number": null,
+    "subscription": {
+      "active": false,
+      "expires": null,
+      "type": "free"
+    },
+    "usage_stats": {
+      "daily_requests": 0,
+      "compatibility_checks": 0,
+      "repeat_views": 0,
+      "last_reset": "2025-09-28",
+      "requests": 4
+    },
+    "daily_cache": {
+      "date": null,
+      "life_path_result": null,
+      "soul_number_result": null,
+      "daily_number_result": null,
+      "birth_date": null
+    },
+    "notifications": {
+      "enabled": true,
+      "time": "09:00"
+    },
+    "text_history": [],
+    "affirmation_history": [],
+    "last_daily_notification": null,
+    "created_at": "2025-09-28 16:23:33",
+    "last_activity": "2025-09-28 16:30:52"
   }
 }
