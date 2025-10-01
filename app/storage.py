@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 
 class UserStorage:
     def __init__(self, storage_file: str = "users_data.json"):
-        base_dir = Path(__file__).parent
+        # Используем корневую директорию проекта для хранения данных
+        base_dir = Path(__file__).parent.parent
         self.storage_file = base_dir / storage_file
         self.data: Dict[str, Any] = self._load_data()
 
@@ -158,12 +159,20 @@ class UserStorage:
     # Работа с кэшем
     # -------------------------
 
-    def save_daily_result(self, user_id: int, birth_date: str, life_path: int, soul_number: int):
+    def save_daily_result(
+        self,
+        user_id: int,
+        birth_date: str,
+        life_path: int,
+        soul_number: int,
+        text: str = None,
+    ):
         user = self.get_user(user_id)
         result = {
             "birth_date": birth_date,
             "life_path_result": life_path,
             "soul_number": soul_number,
+            "text": text,  # Сохраняем текст вместе с результатом
             "timestamp": datetime.now().isoformat(),
         }
         user.setdefault("daily_results", []).append(result)
@@ -225,6 +234,43 @@ class UserStorage:
         user["notifications"]["enabled"] = enabled
         user["notifications"]["time"] = time
         self._save_data()
+
+    def cleanup_old_data(self, days: int = 30) -> int:
+        """
+        Удаляет данные пользователей, неактивных более N дней
+
+        :param days: Количество дней неактивности
+        :return: Количество удаленных пользователей
+        """
+        from datetime import datetime, timedelta
+
+        cutoff_date = datetime.now() - timedelta(days=days)
+        users_to_delete = []
+
+        for user_id, user_data in self.data.items():
+            last_activity = user_data.get("last_activity")
+            if last_activity:
+                try:
+                    activity_date = datetime.strptime(last_activity, "%Y-%m-%d %H:%M:%S")
+                    if activity_date < cutoff_date:
+                        users_to_delete.append(user_id)
+                except ValueError:
+                    # Если формат даты неверный, пропускаем
+                    continue
+
+        # Удаляем пользователей
+        for user_id in users_to_delete:
+            del self.data[user_id]
+
+        if users_to_delete:
+            self._save_data()
+            logger.info(f"Удалено {len(users_to_delete)} неактивных пользователей")
+
+        return len(users_to_delete)
+
+    def get_all_users(self) -> Dict[str, Any]:
+        """Возвращает всех пользователей"""
+        return self.data
 
 
 # -------------------------

@@ -34,24 +34,37 @@ async def subscribe_handler(callback_query: CallbackQuery):
     )
 
 
-from calculations import calculate_daily_number
-
-
 @router.callback_query(lambda c: c.data == "daily_number")
 async def daily_number_handler(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.answer()
     user_id = callback_query.from_user.id
-    user_data = user_storage.get_user(user_id)
 
-    # Проверка кэша
+    from datetime import datetime
+
+    user_data = user_storage.get_user(user_id)
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    # Проверяем кэш на сегодня
     cached = user_storage.get_cached_result(user_id)
-    if cached and cached.get("daily_number_result"):
+    if cached and cached.get("daily_number_result") and cached.get("daily_number_date") == today:
+        # Используем кэшированное число дня
         daily_number = cached["daily_number_result"]
     else:
+        # Генерируем новое число дня
         daily_number = calculate_daily_number()
-        # Сохраняем в кэш без перезаписи life_path
-        if cached:
-            cached["daily_number_result"] = daily_number
-            user_storage._save_data()
+
+        # Сохраняем с датой
+        if not cached:
+            cached = {
+                "birth_date": user_data.get("birth_date"),
+                "life_path_result": user_data.get("life_path_number"),
+                "soul_number": user_data.get("soul_number"),
+                "timestamp": datetime.now().isoformat(),
+            }
+            user_data.setdefault("daily_results", []).append(cached)
+
+        cached["daily_number_result"] = daily_number
+        cached["daily_number_date"] = today
+        user_storage._save_data()
 
     await callback_query.message.edit_text(f"🔢 Ваше число дня: {daily_number}")

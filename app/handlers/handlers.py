@@ -5,6 +5,7 @@
 import json
 import logging
 import random
+from pathlib import Path
 
 from aiogram import Bot, F, Router, types
 from aiogram.filters import Command
@@ -30,6 +31,9 @@ logger = logging.getLogger(__name__)
 
 router = Router()
 
+# Путь к файлу с числами
+NUMBERS_FILE = Path(__file__).parent.parent.parent / "numbers.json"
+
 # Кэш для текстов чисел
 _number_texts_cache = None
 
@@ -38,7 +42,7 @@ def get_number_texts():
     global _number_texts_cache
     if _number_texts_cache is None:
         try:
-            with open("numbers.json", "r", encoding="utf-8") as f:
+            with open(NUMBERS_FILE, "r", encoding="utf-8") as f:
                 _number_texts_cache = json.load(f)
         except Exception as e:
             logger.error(f"Ошибка при загрузке numbers.json: {e}")
@@ -90,7 +94,10 @@ async def process_calculate_number(message: types.Message, state: FSMContext, bo
     if saved_birth_date and cached_result and cached_result.get("birth_date") == saved_birth_date:
         if user_storage.can_view_cached_result(user_id):
             life_path = cached_result["life_path_result"]
-            text = get_text(life_path, "life_path", user_id)
+            # Используем сохраненный текст из кэша или генерируем новый
+            text = cached_result.get("text")
+            if not text:
+                text = get_text(life_path, "life_path", user_id)
             result_text = get_format_life_path_result(life_path, text, saved_birth_date)
             await bot.send_message(message.chat.id, result_text, reply_markup=get_result_keyboard())
             user_storage.increment_repeat_view(user_id)
@@ -147,24 +154,23 @@ async def handle_birth_date(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     birth_date = message.text.strip()
 
-    if not security_validator.rate_limit_check(user_id, "birth_date"):
-        await message.answer(
-            MESSAGES["RATE_LIMIT_BIRTH_DATE_MSG"], reply_markup=get_back_to_main_keyboard()
-        )
-        return
+    # Rate limiting убран для birth_date - пользователь может ошибиться при вводе
+    # Защита от спама есть на уровне лимита расчетов (2 в день)
 
     if not validate_date(birth_date):
         await message.answer(MESSAGES["ERROR_INVALID_DATE"])
         return
 
-    user_data = user_storage.get_user(user_id)
     cached_result = user_storage.get_cached_result(user_id)
 
     # Проверяем, хочет ли пользователь использовать сохраненную дату (точное совпадение)
     if cached_result and cached_result.get("birth_date") == birth_date:
         if user_storage.can_view_cached_result(user_id):
             life_path = cached_result["life_path_result"]
-            text = get_text(life_path, "life_path", user_id)
+            # Используем сохраненный текст из кэша или генерируем новый
+            text = cached_result.get("text")
+            if not text:
+                text = get_text(life_path, "life_path", user_id)
             result_text = get_format_life_path_result(life_path, text, birth_date)
             await message.answer(result_text, reply_markup=get_result_keyboard())
             user_storage.increment_repeat_view(user_id)
@@ -181,10 +187,11 @@ async def handle_birth_date(message: types.Message, state: FSMContext):
     user_storage.set_birth_date(user_id, birth_date)
     life_path = calculate_life_path_number(birth_date)
     soul_number = calculate_soul_number(birth_date)
-    # daily_number не используется — ранее убрал вычисление
-    user_storage.save_daily_result(user_id, birth_date, life_path, soul_number)
 
+    # Генерируем текст ОДИН раз и сохраняем в кэш
     text = get_text(life_path, "life_path", user_id)
+    user_storage.save_daily_result(user_id, birth_date, life_path, soul_number, text)
+
     result_text = f"🔮 ВАШЕ ЧИСЛО СУДЬБЫ: {life_path}\n{text}\n📅 Дата: {birth_date}"
     await message.answer(result_text, reply_markup=get_result_keyboard())
     await state.clear()
@@ -241,9 +248,7 @@ async def handle_second_date(message: types.Message, state: FSMContext):
     elif diff <= 4:
         score, description = 5, "Средняя совместимость. Требуется понимание и компромиссы."
 
-    result_text = (
-        f"💑 СОВМЕСТИМОСТЬ: {first_number} и {second_number}\nОценка: {score}/9\n{description}"
-    )
+    result_text = f"💑 СОВМЕСТИМОСТЬ: {first_number} и {second_number}\nОценка: {score}/9\n{description}"
     await message.answer(result_text, reply_markup=get_compatibility_result_keyboard())
     await state.clear()
 
@@ -322,7 +327,6 @@ async def feedback_button_command(message: types.Message, state: FSMContext):
 @router.message(UserStates.waiting_for_feedback)
 @catch_errors()
 async def handle_feedback(message: types.Message, state: FSMContext):
-    feedback_text = message.text.strip()
     user_id = message.from_user.id
 
     if not security_validator.rate_limit_check(user_id, "feedback"):
@@ -330,8 +334,7 @@ async def handle_feedback(message: types.Message, state: FSMContext):
         await state.clear()
         return
 
-    sanitized_text = security_validator.sanitize_text(feedback_text)
-
     # Сохранение в базу или отправка админу
+    # feedback_text = message.text.strip()  # Будет использовано при реализации сохранения
     await message.answer(MESSAGES["FEEDBACK_SUCCESS"], reply_markup=get_feedback_keyboard())
     await state.clear()

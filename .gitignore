@@ -1,5 +1,7 @@
 # Данные пользователей
 users_data.json
+users_data.json.backup
+*.backup
 
 # Виртуальное окружение
 venv/

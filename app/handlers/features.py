@@ -1,19 +1,17 @@
 from datetime import datetime
 
 from aiogram import Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
+from calculations import get_affirmation
 from decorators import catch_errors
 from keyboards import get_back_to_main_keyboard
 from messages import MESSAGES
 from security import security_validator
-
-router = Router()
-
-
-from aiogram.fsm.context import FSMContext
-from calculations import get_affirmation
 from state import UserStates
 from storage import user_storage
+
+router = Router()
 
 
 @router.callback_query(lambda c: c.data == "affirmation")
@@ -71,10 +69,12 @@ async def handle_diary_observation(message: Message, state: FSMContext):
     user_data["diary_observations"].append(observation)
     user_storage._save_data()
 
-    await message.answer(
-        f"📝 Наблюдение сохранено!\nВаше число судьбы: {observation['number']}\nДата: {observation['date']}",
-        reply_markup=get_back_to_main_keyboard(),
+    result_text = (
+        f"📝 Наблюдение сохранено!\n"
+        f"Ваше число судьбы: {observation['number']}\n"
+        f"Дата: {observation['date']}"
     )
+    await message.answer(result_text, reply_markup=get_back_to_main_keyboard())
     await state.clear()
 
 
@@ -82,8 +82,6 @@ async def handle_diary_observation(message: Message, state: FSMContext):
 async def calculate_number_handler(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.answer()
     user_id = callback_query.from_user.id
-    user_data = user_storage.get_user(user_id)
-    saved_birth_date = user_data.get("birth_date")
     cached_result = user_storage.get_cached_result(user_id)
 
     # Лимиты и кэш

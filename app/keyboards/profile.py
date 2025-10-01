@@ -1,0 +1,18 @@
+"""
+Клавиатуры для профиля пользователя
+"""
+
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
+
+def get_profile_keyboard(has_calculated: bool = False) -> InlineKeyboardMarkup:
+    """
+    Создает клавиатуру для профиля пользователя
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🧮 Рассчитать число", callback_data="calculate_number")],
+            [InlineKeyboardButton(text="↩️ В главное меню", callback_data="back_main")],
+        ]
+    )
+    return keyboard

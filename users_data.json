@@ -1,39 +1,115 @@
 {
-  "1512454100": {
-    "birth_date": "10.09.2021",
-    "life_path_number": 6,
-    "soul_number": 1,
+  "627875032": {
+    "birth_date": "15.01.1992",
+    "life_path_number": 1,
+    "soul_number": 6,
     "subscription": {
       "active": false,
       "expires": null,
       "type": "free"
     },
     "usage_stats": {
-      "daily_requests": 2,
+      "daily_requests": 0,
       "compatibility_checks": 0,
-      "repeat_views": 10,
-      "last_reset": "2025-09-28"
+      "repeat_views": 0,
+      "last_reset": "2025-09-30",
+      "requests": 1
     },
     "daily_cache": {
-      "date": "2025-09-28",
-      "birth_date": "10.09.2021",
-      "life_path_result": 6,
-      "soul_number_result": 1,
-      "daily_number_result": null
+      "date": null,
+      "life_path_result": null,
+      "soul_number_result": null,
+      "daily_number_result": null,
+      "birth_date": null
     },
     "notifications": {
       "enabled": true,
       "time": "09:00"
     },
-    "text_history": [
-      "Ваше число судьбы 2 означает, что вы - душа любой компании. Люди тянутся к вам за советом и поддержкой.",
-      "Число судьбы 6 наделяет вас даром воспитания и заботы. Вы умеете создавать уют и комфорт для окружающих.",
-      "Шестерка - это число любви и заботы. Вы призваны быть источником тепла и поддержки для окружающих.",
-      "Число 6 дает вам дар исцеления и утешения. Вы умеете залечивать душевные раны и приносить покой.",
-      "Ваша кармическая задача - научиться заботиться о других, не забывая о собственных потребностях."
+    "text_history": [],
+    "affirmation_history": [],
+    "last_daily_notification": null,
+    "created_at": "2025-09-30 22:15:23",
+    "last_activity": "2025-09-30 23:09:07",
+    "daily_results": [
+      {
+        "birth_date": "15.01.1992",
+        "life_path_result": 1,
+        "soul_number": 6,
+        "timestamp": "2025-09-30T22:15:32.089415"
+      }
+    ],
+    "repeat_views": 4
+  },
+  "8367480117": {
+    "birth_date": null,
+    "life_path_number": null,
+    "soul_number": null,
+    "subscription": {
+      "active": false,
+      "expires": null,
+      "type": "free"
+    },
+    "usage_stats": {
+      "daily_requests": 0,
+      "compatibility_checks": 0,
+      "repeat_views": 0,
+      "last_reset": "2025-09-30",
+      "requests": 3
+    },
+    "daily_cache": {
+      "date": null,
+      "life_path_result": null,
+      "soul_number_result": null,
+      "daily_number_result": null,
+      "birth_date": null
+    },
+    "notifications": {
+      "enabled": true,
+      "time": "09:00"
+    },
+    "text_history": [],
+    "affirmation_history": [],
+    "last_daily_notification": null,
+    "created_at": "2025-09-30 22:15:50",
+    "last_activity": "2025-09-30 23:09:09"
+  },
+  "12345": {
+    "birth_date": null,
+    "life_path_number": null,
+    "soul_number": null,
+    "subscription": {
+      "active": false,
+      "expires": null,
+      "type": "free"
+    },
+    "usage_stats": {
+      "daily_requests": 0,
+      "compatibility_checks": 0,
+      "repeat_views": 0,
+      "last_reset": "2025-09-30"
+    },
+    "daily_cache": {
+      "date": null,
+      "life_path_result": null,
+      "soul_number_result": null,
+      "daily_number_result": null,
+      "birth_date": null
+    },
+    "notifications": {
+      "enabled": true,
+      "time": "09:00"
+    },
+    "text_history": [],
+    "affirmation_history": [
+      {
+        "number": 8,
+        "text": "Моя власть и влияние используются во благо.",
+        "date": "2025-09-30"
+      }
     ],
     "last_daily_notification": null,
-    "created_at": "2025-09-28 11:20:40",
-    "last_activity": "2025-09-28 11:52:27"
+    "created_at": "2025-09-30 23:22:01",
+    "last_activity": "2025-09-30 23:22:01"
   }
 }

@@ -59,7 +59,6 @@ class NotificationScheduler:
 
         # Проверяем, нужно ли отправлять уведомления
         if now.hour == self.target_hour and now.minute == 0 and self.last_sent_date != today:
-
             await self._send_daily_notifications()
             self.last_sent_date = today
 
@@ -139,7 +138,8 @@ class NotificationScheduler:
                     return
                 else:
                     logger.warning(
-                        f"Попытка {attempt + 1} отправки уведомления пользователю {user_id} неудачна: {e}"
+                        f"Попытка {attempt + 1} отправки уведомления "
+                        f"пользователю {user_id} неудачна: {e}"
                     )
                     if attempt < self.max_retries - 1:
                         await asyncio.sleep(self.retry_delay)

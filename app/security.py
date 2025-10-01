@@ -12,19 +12,16 @@ class SecurityValidator:
     def __init__(self):
         # Сохраняем историю запросов отдельно по действиям
         self.rate_limit_cache: Dict[str, Dict[int, list]] = {
-            "birth_date": {},
             "feedback": {},
             "diary": {},
         }
         self.max_requests_per_minute = {
-            "birth_date": 1,  # Раз в минуту
-            "feedback": 1,  # Раз в час
-            "diary": 1,  # Раз в час
+            "feedback": 3,  # 3 отзыва в час
+            "diary": 10,  # 10 записей в час
         }
         self.rate_limit_seconds = {
-            "birth_date": 30,  # в секундах
-            "feedback": 3600,
-            "diary": 3600,
+            "feedback": 3600,  # 1 час
+            "diary": 3600,  # 1 час
         }
         self.max_input_length = 1000
 
@@ -50,8 +47,12 @@ class SecurityValidator:
             self.rate_limit_cache[action][user_id] = user_requests
 
             # Проверяем лимит
-            if len(user_requests) >= 1:
-                logger.warning(f"Превышен лимит '{action}' для пользователя {user_id}")
+            max_requests = self.max_requests_per_minute.get(action, 1)
+            if len(user_requests) >= max_requests:
+                logger.warning(
+                    f"Превышен лимит '{action}' для пользователя {user_id} "
+                    f"({len(user_requests)}/{max_requests})"
+                )
                 return False
 
             # Добавляем текущий запрос

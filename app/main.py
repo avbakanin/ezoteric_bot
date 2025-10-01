@@ -4,10 +4,6 @@
 
 import asyncio
 import logging
-import os
-import sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "app"))
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -77,7 +73,6 @@ def main():
     Главная функция
     """
     try:
-
         dp.include_router(handlers_router)
         dp.include_router(back_router)
         dp.include_router(features_router)

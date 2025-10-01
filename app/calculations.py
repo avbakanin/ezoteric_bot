@@ -24,27 +24,54 @@ def reduce_number(number: int) -> int:
 
 
 def get_affirmation(user_id: int = None) -> tuple[int, str]:
+    from datetime import datetime
+
     from storage import user_storage
 
     try:
-        number = random.choice(list(NUMBERS_DATA.keys()))
-        affirmations = NUMBERS_DATA[number]["affirmations"]
-
         if user_id:
             user_data = user_storage.get_user(user_id)
-            history = [a["text"] for a in user_data.get("affirmation_history", [])[-10:]]
-            available = [a for a in affirmations if a not in history]
+            today = datetime.now().strftime("%Y-%m-%d")
+
+            # Проверяем, есть ли аффирмация на сегодня
+            affirmation_history = user_data.get("affirmation_history", [])
+            if affirmation_history:
+                last_affirmation = affirmation_history[-1]
+                last_date = last_affirmation.get("date", "")
+
+                # Если аффирмация уже была сегодня - возвращаем её
+                if last_date == today:
+                    return last_affirmation.get("number", 0), last_affirmation.get("text", "")
+
+            # Генерируем новую аффирмацию для нового дня
+            number = random.choice(list(NUMBERS_DATA.keys()))
+            affirmations = NUMBERS_DATA[number]["affirmations"]
+
+            history_texts = [a["text"] for a in affirmation_history[-10:]]
+            available = [a for a in affirmations if a not in history_texts]
             chosen = random.choice(available) if available else random.choice(affirmations)
 
+            # Сохраняем с датой
             if "affirmation_history" not in user_data:
                 user_data["affirmation_history"] = []
-            user_data["affirmation_history"].append({"number": int(number), "text": chosen})
+            user_data["affirmation_history"].append(
+                {
+                    "number": int(number),
+                    "text": chosen,
+                    "date": today,
+                }
+            )
             user_data["affirmation_history"] = user_data["affirmation_history"][-10:]
             user_storage._save_data()
-        else:
-            chosen = random.choice(affirmations)
 
-        return int(number), chosen
+            return int(number), chosen
+        else:
+            # Без user_id - просто случайная аффирмация
+            number = random.choice(list(NUMBERS_DATA.keys()))
+            affirmations = NUMBERS_DATA[number]["affirmations"]
+            chosen = random.choice(affirmations)
+            return int(number), chosen
+
     except Exception:
         defaults = [
             "Я принимаю себя и доверяю процессу жизни",
@@ -61,7 +88,7 @@ def calculate_life_path_number(birth_date: str) -> int:
         day, month, year = map(int, birth_date.split("."))
         total = sum(int(d) for d in f"{day:02d}{month:02d}{year}")
         return reduce_number(total)
-    except:
+    except Exception:
         return 0
 
 
@@ -70,7 +97,7 @@ def calculate_soul_number(birth_date: str) -> int:
     try:
         day, _, _ = map(int, birth_date.split("."))
         return reduce_number(day)
-    except:
+    except Exception:
         return 0
 
 
@@ -83,7 +110,7 @@ def calculate_daily_number(date: str = None) -> int:
         day, month, year = map(int, date.split("."))
         total = sum(int(d) for d in f"{day:02d}{month:02d}{year}")
         return reduce_number(total)
-    except:
+    except Exception:
         return 0
 
 
@@ -107,5 +134,5 @@ def validate_date(date_str: str) -> bool:
                 if day > 28:
                     return False
         return True
-    except:
+    except Exception:
         return False
