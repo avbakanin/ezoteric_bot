@@ -3,6 +3,7 @@
 """
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from messages import CallbackData
 
 
 def get_yes_no_keyboard() -> InlineKeyboardMarkup:
@@ -12,8 +13,8 @@ def get_yes_no_keyboard() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="✅ Да", callback_data="yes"),
-                InlineKeyboardButton(text="❌ Нет", callback_data="no"),
+                InlineKeyboardButton(text="✅ Да", callback_data=CallbackData.YES),
+                InlineKeyboardButton(text="❌ Нет", callback_data=CallbackData.NO),
             ]
         ]
     )

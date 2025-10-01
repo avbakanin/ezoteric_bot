@@ -3,38 +3,40 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from calculations import calculate_daily_number
 from keyboards import get_back_to_main_keyboard
-from messages import MESSAGES
+from messages import CallbackData, MessagesData, get_daily_number
 from storage import user_storage
 
 router = Router()
 
 
-@router.callback_query(lambda c: c.data in ["premium_full", "premium_compatibility"])
+@router.callback_query(
+    lambda c: c.data in [CallbackData.PREMIUM_FULL, CallbackData.PREMIUM_COMPATIBILITY]
+)
 async def premium_handler(callback_query: CallbackQuery):
     await callback_query.answer()
     data = callback_query.data.upper()  # приводим к верхнему регистру
 
-    await callback_query.message.edit_text(MESSAGES[data], reply_markup=get_back_to_main_keyboard())
+    await callback_query.message.edit_text(MessagesData[data], reply_markup=get_back_to_main_keyboard())
 
 
-@router.callback_query(lambda c: c.data == "premium_info")
+@router.callback_query(lambda c: c.data == CallbackData.PREMIUM_INFO)
 async def premium_info_handler(callback_query: CallbackQuery):
     await callback_query.answer()
     await callback_query.message.edit_text(
-        MESSAGES["PREMIUM_INFO_TEXT"], reply_markup=get_back_to_main_keyboard()
+        MessagesData.PREMIUM_INFO_TEXT, reply_markup=get_back_to_main_keyboard()
     )
 
 
-@router.callback_query(lambda c: c.data == "subscribe")
+@router.callback_query(lambda c: c.data == CallbackData.SUBSCRIBE)
 async def subscribe_handler(callback_query: CallbackQuery):
     await callback_query.answer()
     await callback_query.message.edit_text(
-        "💎 ОФОРМЛЕНИЕ PREMIUM ПОДПИСКИ\n\nСкоро будет доступно!",
+        MessagesData.PREMIUM_SOON,
         reply_markup=get_back_to_main_keyboard(),
     )
 
 
-@router.callback_query(lambda c: c.data == "daily_number")
+@router.callback_query(lambda c: c.data == CallbackData.DAILY_NUMBER)
 async def daily_number_handler(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -67,4 +69,4 @@ async def daily_number_handler(callback_query: CallbackQuery, state: FSMContext)
         cached["daily_number_date"] = today
         user_storage._save_data()
 
-    await callback_query.message.edit_text(f"🔢 Ваше число дня: {daily_number}")
+    await callback_query.message.edit_text(get_daily_number(daily_number))

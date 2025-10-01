@@ -3,6 +3,7 @@
 """
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from messages import CallbackData
 
 
 def get_profile_keyboard(has_calculated: bool = False) -> InlineKeyboardMarkup:
@@ -11,8 +12,12 @@ def get_profile_keyboard(has_calculated: bool = False) -> InlineKeyboardMarkup:
     """
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🧮 Рассчитать число", callback_data="calculate_number")],
-            [InlineKeyboardButton(text="↩️ В главное меню", callback_data="back_main")],
+            [
+                InlineKeyboardButton(
+                    text="🧮 Рассчитать число", callback_data=CallbackData.CALCULATE_NUMBER
+                )
+            ],
+            [InlineKeyboardButton(text="↩️ В главное меню", callback_data=CallbackData.BACK_MAIN)],
         ]
     )
     return keyboard

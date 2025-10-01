@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery, Message
 from calculations import get_affirmation
 from decorators import catch_errors
 from keyboards import get_back_to_main_keyboard
-from messages import MESSAGES
+from messages import CallbackData, MessagesData, get_affirmation_text
 from security import security_validator
 from state import UserStates
 from storage import user_storage
@@ -14,30 +14,38 @@ from storage import user_storage
 router = Router()
 
 
-@router.callback_query(lambda c: c.data == "affirmation")
+@router.callback_query(lambda c: c.data == CallbackData.AFFIRMATION)
 async def affirmation_handler(callback_query: CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     _, text = get_affirmation(user_id)
-    await callback_query.message.edit_text(f"✨ Твоя аффирмация:\n{text}")
+    await callback_query.message.edit_text(get_affirmation_text(text))
 
 
-@router.callback_query(lambda c: c.data in ["feedback", "leave_feedback", "suggestion", "report_bug"])
+@router.callback_query(
+    lambda c: c.data
+    in [
+        CallbackData.FEEDBACK,
+        CallbackData.LEAVE_FEEDBACK,
+        CallbackData.SUGGESTION,
+        CallbackData.REPORT_BUG,
+    ]
+)
 async def feedback_handler(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.answer()
-    await callback_query.message.edit_text(MESSAGES["FEEDBACK"])
+    await callback_query.message.edit_text(MessagesData.FEEDBACK_CB)
     await state.set_state(UserStates.waiting_for_feedback)
 
 
-@router.callback_query(lambda c: c.data == "diary_observation")
+@router.callback_query(lambda c: c.data == CallbackData.DIARY_OBSERVATION)
 async def diary_observation_handler(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.answer()
-    await callback_query.message.edit_text(MESSAGES["DIARY_PROMPT"])
+    await callback_query.message.edit_text(MessagesData.DIARY_PROMPT)
     await state.set_state(UserStates.waiting_for_diary_observation)
 
 
 # ===========================
-# Дневник наблюдений
+# Дневник наблюдений - запись по датам наблюдений человек(бесплатно 3 в день)
 # ===========================
 
 
@@ -49,7 +57,7 @@ async def handle_diary_observation(message: Message, state: FSMContext):
 
     if not security_validator.rate_limit_check(user_id, "diary"):
         await message.answer(
-            MESSAGES["ERROR_DIARY_LIMIT_EXCEEDED"],
+            MessagesData.ERROR_DIARY_LIMIT_EXCEEDED,
             reply_markup=get_back_to_main_keyboard(),
         )
         await state.clear()
@@ -78,7 +86,7 @@ async def handle_diary_observation(message: Message, state: FSMContext):
     await state.clear()
 
 
-@router.callback_query(lambda c: c.data == "calculate_number")
+@router.callback_query(lambda c: c.data == CallbackData.CALCULATE_NUMBER)
 async def calculate_number_handler(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -97,9 +105,9 @@ async def calculate_number_handler(callback_query: CallbackQuery, state: FSMCont
         return
 
     if not user_storage.can_make_request(user_id):
-        await callback_query.message.edit_text(MESSAGES["ERROR_LIMIT_EXCEEDED"])
+        await callback_query.message.edit_text(MessagesData.ERROR_LIMIT_EXCEEDED)
         return
 
     # Нет сохраненной даты
-    await callback_query.message.edit_text(MESSAGES["BASE_BIRTH_DATE_PROMPT"])
+    await callback_query.message.edit_text(MessagesData.BASE_BIRTH_DATE_PROMPT)
     await state.set_state(UserStates.waiting_for_birth_date)

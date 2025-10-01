@@ -22,7 +22,14 @@ from keyboards import (
     get_profile_keyboard,
     get_result_keyboard,
 )
-from messages import MESSAGES, get_format_life_path_result, get_profile_text
+from messages import (
+    CallbackData,
+    CommandsData,
+    MessagesData,
+    TextCommandsData,
+    get_format_life_path_result,
+    get_profile_text,
+)
 from security import security_validator
 from state import UserStates
 from storage import user_storage
@@ -75,12 +82,12 @@ def get_text(number: int, context: str, user_id: int) -> str:
 # ===========================
 
 
-@router.message(Command("start"))
+@router.message(Command(CommandsData.START))
 @catch_errors("Ошибка при запуске бота.")
 async def start_command(message: types.Message):
     user_id = message.from_user.id
     logger.info(f"Пользователь {user_id} запустил бота")
-    await message.answer(MESSAGES["START"], reply_markup=get_main_menu_keyboard())
+    await message.answer(MessagesData.START, reply_markup=get_main_menu_keyboard())
 
 
 # Общая функция для расчета (вынесена — вызывается и из команды, и из callback)
@@ -105,7 +112,7 @@ async def process_calculate_number(message: types.Message, state: FSMContext, bo
         else:
             await bot.send_message(
                 message.chat.id,
-                MESSAGES["ERROR_VIEW_LIMIT_EXCEEDED"],
+                MessagesData.ERROR_VIEW_LIMIT_EXCEEDED,
                 reply_markup=get_back_to_main_keyboard(),
             )
             return
@@ -114,7 +121,7 @@ async def process_calculate_number(message: types.Message, state: FSMContext, bo
     if not user_storage.can_make_request(user_id):
         await bot.send_message(
             message.chat.id,
-            MESSAGES["ERROR_LIMIT_EXCEEDED"],
+            MessagesData.ERROR_LIMIT_EXCEEDED,
             reply_markup=get_back_to_main_keyboard(),
         )
         return
@@ -122,21 +129,21 @@ async def process_calculate_number(message: types.Message, state: FSMContext, bo
     # Ставим состояние ожидания даты
     await bot.send_message(
         message.chat.id,
-        MESSAGES["BIRTH_DATE_PROMPT"],
+        MessagesData.BIRTH_DATE_PROMPT,
         reply_markup=get_back_to_main_keyboard(),
     )
     await state.set_state(UserStates.waiting_for_birth_date)
 
 
 # Хэндлер на кнопку "🧮 Рассчитать Число Судьбы"
-@router.message(lambda m: m.text == "🧮 Рассчитать Число Судьбы")
+@router.message(lambda m: m.text == TextCommandsData.CALCULATE_NUMBER)
 @catch_errors()
 async def calculate_number_command(message: types.Message, state: FSMContext, bot: Bot):
     await process_calculate_number(message, state, bot)
 
 
 # Хэндлер на кнопку "📋 Посмотреть снова" — callback_data должен быть "view_again"
-@router.callback_query(F.data == "view_soul_number_again")
+@router.callback_query(F.data == CallbackData.VIEW_SOUL_NUMBER_AGAIN)
 async def view_again_callback(callback: types.CallbackQuery, state: FSMContext, bot: Bot):
     # Перенаправляем на ту же бизнес-логику
     await callback.answer()
@@ -158,7 +165,7 @@ async def handle_birth_date(message: types.Message, state: FSMContext):
     # Защита от спама есть на уровне лимита расчетов (2 в день)
 
     if not validate_date(birth_date):
-        await message.answer(MESSAGES["ERROR_INVALID_DATE"])
+        await message.answer(MessagesData.ERROR_INVALID_DATE)
         return
 
     cached_result = user_storage.get_cached_result(user_id)
@@ -178,7 +185,7 @@ async def handle_birth_date(message: types.Message, state: FSMContext):
             return
         else:
             await message.answer(
-                MESSAGES["ERROR_VIEW_LIMIT_EXCEEDED"], reply_markup=get_back_to_main_keyboard()
+                MessagesData.ERROR_VIEW_LIMIT_EXCEEDED, reply_markup=get_back_to_main_keyboard()
             )
             await state.clear()
             return
@@ -202,7 +209,7 @@ async def handle_birth_date(message: types.Message, state: FSMContext):
 # ===========================
 
 
-@router.message(lambda m: m.text == "💑 Проверить Совместимость")
+@router.message(lambda m: m.text == TextCommandsData.COMPATIBILITY)
 @catch_errors()
 async def compatibility_command(message: types.Message, state: FSMContext):
     await message.answer(
@@ -216,7 +223,7 @@ async def compatibility_command(message: types.Message, state: FSMContext):
 async def handle_first_date(message: types.Message, state: FSMContext):
     first_date = message.text.strip()
     if not validate_date(first_date):
-        await message.answer(MESSAGES["ERROR_INVALID_DATE"])
+        await message.answer(MessagesData.ERROR_INVALID_DATE)
         return
     await state.update_data(first_date=first_date)
     await message.answer(
@@ -230,7 +237,7 @@ async def handle_first_date(message: types.Message, state: FSMContext):
 async def handle_second_date(message: types.Message, state: FSMContext):
     second_date = message.text.strip()
     if not validate_date(second_date):
-        await message.answer(MESSAGES["ERROR_INVALID_DATE"])
+        await message.answer(MessagesData.ERROR_INVALID_DATE)
         return
 
     data = await state.get_data()
@@ -248,7 +255,9 @@ async def handle_second_date(message: types.Message, state: FSMContext):
     elif diff <= 4:
         score, description = 5, "Средняя совместимость. Требуется понимание и компромиссы."
 
-    result_text = f"💑 СОВМЕСТИМОСТЬ: {first_number} и {second_number}\nОценка: {score}/9\n{description}"
+    result_text = (
+        f"💑 СОВМЕСТИМОСТЬ: {first_number} и {second_number}\nОценка: {score}/9\n{description}"
+    )
     await message.answer(result_text, reply_markup=get_compatibility_result_keyboard())
     await state.clear()
 
@@ -258,7 +267,7 @@ async def handle_second_date(message: types.Message, state: FSMContext):
 # ===========================
 
 
-@router.message(lambda m: m.text == "📊 Мой Профиль")
+@router.message(lambda m: m.text == TextCommandsData.PROFILE)
 @catch_errors()
 async def profile_command(message: types.Message):
     user_id = message.from_user.id
@@ -278,49 +287,47 @@ async def profile_command(message: types.Message):
     await message.answer(profile_text, reply_markup=get_profile_keyboard(has_calculated))
 
 
-@router.message(lambda m: m.text == "ℹ️ О боте")
+@router.message(lambda m: m.text == TextCommandsData.ABOUT)
 @catch_errors()
 async def about_command(message: types.Message):
-    await message.answer(MESSAGES["ABOUT_DESCRIPTION"], reply_markup=get_about_keyboard())
+    await message.answer(MessagesData.ABOUT_DESCRIPTION, reply_markup=get_about_keyboard())
 
 
-@router.message(Command("menu"))
+@router.message(Command(CommandsData.MENU))
 @catch_errors()
 async def menu_command(message: types.Message):
-    await message.answer("🔮 Главное меню", reply_markup=get_main_menu_keyboard())
+    await message.answer(MessagesData.MAIN_MENU, reply_markup=get_main_menu_keyboard())
 
 
-@router.message(Command("help"))
+@router.message(Command(CommandsData.HELP))
 @catch_errors()
 async def help_command(message: types.Message):
-    await message.answer(MESSAGES["HELP"])
+    await message.answer(MessagesData.HELP)
 
 
 @router.message()
 @catch_errors()
 async def unknown_message(message: types.Message):
-    await message.answer(MESSAGES["UNKNOWN"])
+    await message.answer(MessagesData.UNKNOWN)
 
 
-@router.message(Command("premium_info"))
+@router.message(Command(CommandsData.PREMIUM_INFO))
 @catch_errors()
 async def premium_info_command(message: types.Message):
-    await message.answer(MESSAGES["PREMIUM_INFO_TEXT"], reply_markup=get_premium_info_keyboard())
+    await message.answer(MessagesData.PREMIUM_INFO_TEXT, reply_markup=get_premium_info_keyboard())
 
 
-@router.message(Command("feedback"))
+@router.message(Command(CommandsData.FEEDBACK))
 @catch_errors()
 async def feedback_command(message: types.Message, state: FSMContext):
-    await message.answer(
-        "📝 ОТЗЫВЫ И ПРЕДЛОЖЕНИЯ\nВаше мнение очень важно!", reply_markup=get_feedback_keyboard()
-    )
+    await message.answer(MessagesData.FEEDBACK, reply_markup=get_feedback_keyboard())
     await state.set_state(UserStates.waiting_for_feedback)
 
 
-@router.message(lambda m: m.text == "📝 Оставить отзыв")
+@router.message(lambda m: m.text == TextCommandsData.FEEDBACK)
 @catch_errors()
 async def feedback_button_command(message: types.Message, state: FSMContext):
-    await message.answer(MESSAGES["FEEDBACK_PROMPT"], reply_markup=get_feedback_keyboard())
+    await message.answer(MessagesData.FEEDBACK_PROMPT, reply_markup=get_feedback_keyboard())
     await state.set_state(UserStates.waiting_for_feedback)
 
 
@@ -330,11 +337,13 @@ async def handle_feedback(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
 
     if not security_validator.rate_limit_check(user_id, "feedback"):
-        await message.answer(MESSAGES["ERROR_FEEDBACK_LIMIT"], reply_markup=get_back_to_main_keyboard())
+        await message.answer(
+            MessagesData.ERROR_FEEDBACK_LIMIT, reply_markup=get_back_to_main_keyboard()
+        )
         await state.clear()
         return
 
     # Сохранение в базу или отправка админу
     # feedback_text = message.text.strip()  # Будет использовано при реализации сохранения
-    await message.answer(MESSAGES["FEEDBACK_SUCCESS"], reply_markup=get_feedback_keyboard())
+    await message.answer(MessagesData.FEEDBACK_SUCCESS, reply_markup=get_feedback_keyboard())
     await state.clear()

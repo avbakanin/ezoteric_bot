@@ -3,6 +3,7 @@
 """
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from messages import CallbackData
 
 
 def get_result_keyboard() -> InlineKeyboardMarkup:
@@ -11,9 +12,17 @@ def get_result_keyboard() -> InlineKeyboardMarkup:
     """
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🔒 Полная расшифровка (Премиум)", callback_data="premium_full")],
-            [InlineKeyboardButton(text="📋 Посмотреть снова", callback_data="view_soul_number_again")],
-            [InlineKeyboardButton(text="↩️ В главное меню", callback_data="back_main")],
+            [
+                InlineKeyboardButton(
+                    text="🔒 Полная расшифровка (Премиум)", callback_data=CallbackData.PREMIUM_FULL
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📋 Посмотреть снова", callback_data=CallbackData.VIEW_SOUL_NUMBER_AGAIN
+                )
+            ],
+            [InlineKeyboardButton(text="↩️ В главное меню", callback_data=CallbackData.BACK_MAIN)],
         ]
     )
     return keyboard
@@ -27,10 +36,11 @@ def get_compatibility_result_keyboard() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="🔒 Детальный разбор (Премиум)", callback_data="premium_compatibility"
+                    text="🔒 Детальный разбор (Премиум)",
+                    callback_data=CallbackData.PREMIUM_COMPATIBILITY,
                 )
             ],
-            [InlineKeyboardButton(text="↩️ В главное меню", callback_data="back_main")],
+            [InlineKeyboardButton(text="↩️ В главное меню", callback_data=CallbackData.BACK_MAIN)],
         ]
     )
     return keyboard
