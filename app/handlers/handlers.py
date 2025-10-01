@@ -7,30 +7,27 @@ import logging
 import random
 from pathlib import Path
 
-from aiogram import Bot, F, Router, types
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
+from aiogram.types import Message
 from calculations import calculate_life_path_number, calculate_soul_number, validate_date
 from decorators import catch_errors
 from keyboards import (
     get_about_keyboard,
     get_back_to_main_keyboard,
-    get_compatibility_result_keyboard,
-    get_feedback_keyboard,
     get_main_menu_keyboard,
     get_premium_info_keyboard,
     get_profile_keyboard,
     get_result_keyboard,
 )
 from messages import (
-    CallbackData,
     CommandsData,
     MessagesData,
     TextCommandsData,
     get_format_life_path_result,
     get_profile_text,
 )
-from security import security_validator
 from state import UserStates
 from storage import user_storage
 
@@ -84,70 +81,10 @@ def get_text(number: int, context: str, user_id: int) -> str:
 
 @router.message(Command(CommandsData.START))
 @catch_errors("Ошибка при запуске бота.")
-async def start_command(message: types.Message):
+async def start_command(message: Message):
     user_id = message.from_user.id
     logger.info(f"Пользователь {user_id} запустил бота")
     await message.answer(MessagesData.START, reply_markup=get_main_menu_keyboard())
-
-
-# Общая функция для расчета (вынесена — вызывается и из команды, и из callback)
-async def process_calculate_number(message: types.Message, state: FSMContext, bot: Bot):
-    user_id = message.from_user.id
-    user_data = user_storage.get_user(user_id)
-    saved_birth_date = user_data.get("birth_date")
-    cached_result = user_storage.get_cached_result(user_id)
-
-    # Если есть кэш и лимит просмотра позволяет — показываем сразу результат
-    if saved_birth_date and cached_result and cached_result.get("birth_date") == saved_birth_date:
-        if user_storage.can_view_cached_result(user_id):
-            life_path = cached_result["life_path_result"]
-            # Используем сохраненный текст из кэша или генерируем новый
-            text = cached_result.get("text")
-            if not text:
-                text = get_text(life_path, "life_path", user_id)
-            result_text = get_format_life_path_result(life_path, text, saved_birth_date)
-            await bot.send_message(message.chat.id, result_text, reply_markup=get_result_keyboard())
-            user_storage.increment_repeat_view(user_id)
-            return
-        else:
-            await bot.send_message(
-                message.chat.id,
-                MessagesData.ERROR_VIEW_LIMIT_EXCEEDED,
-                reply_markup=get_back_to_main_keyboard(),
-            )
-            return
-
-    # Если лимиты запросов превышены
-    if not user_storage.can_make_request(user_id):
-        await bot.send_message(
-            message.chat.id,
-            MessagesData.ERROR_LIMIT_EXCEEDED,
-            reply_markup=get_back_to_main_keyboard(),
-        )
-        return
-
-    # Ставим состояние ожидания даты
-    await bot.send_message(
-        message.chat.id,
-        MessagesData.BIRTH_DATE_PROMPT,
-        reply_markup=get_back_to_main_keyboard(),
-    )
-    await state.set_state(UserStates.waiting_for_birth_date)
-
-
-# Хэндлер на кнопку "🧮 Рассчитать Число Судьбы"
-@router.message(lambda m: m.text == TextCommandsData.CALCULATE_NUMBER)
-@catch_errors()
-async def calculate_number_command(message: types.Message, state: FSMContext, bot: Bot):
-    await process_calculate_number(message, state, bot)
-
-
-# Хэндлер на кнопку "📋 Посмотреть снова" — callback_data должен быть "view_again"
-@router.callback_query(F.data == CallbackData.VIEW_SOUL_NUMBER_AGAIN)
-async def view_again_callback(callback: types.CallbackQuery, state: FSMContext, bot: Bot):
-    # Перенаправляем на ту же бизнес-логику
-    await callback.answer()
-    await process_calculate_number(callback.message, state, bot)
 
 
 # ===========================
@@ -157,7 +94,7 @@ async def view_again_callback(callback: types.CallbackQuery, state: FSMContext, 
 
 @router.message(UserStates.waiting_for_birth_date)
 @catch_errors()
-async def handle_birth_date(message: types.Message, state: FSMContext):
+async def handle_birth_date(message: Message, state: FSMContext):
     user_id = message.from_user.id
     birth_date = message.text.strip()
 
@@ -205,71 +142,13 @@ async def handle_birth_date(message: types.Message, state: FSMContext):
 
 
 # ===========================
-# Совместимость
-# ===========================
-
-
-@router.message(lambda m: m.text == TextCommandsData.COMPATIBILITY)
-@catch_errors()
-async def compatibility_command(message: types.Message, state: FSMContext):
-    await message.answer(
-        "Введите первую дату рождения (ДД.ММ.ГГГГ):", reply_markup=get_back_to_main_keyboard()
-    )
-    await state.set_state(UserStates.waiting_for_first_date)
-
-
-@router.message(UserStates.waiting_for_first_date)
-@catch_errors()
-async def handle_first_date(message: types.Message, state: FSMContext):
-    first_date = message.text.strip()
-    if not validate_date(first_date):
-        await message.answer(MessagesData.ERROR_INVALID_DATE)
-        return
-    await state.update_data(first_date=first_date)
-    await message.answer(
-        "Введите вторую дату рождения (ДД.ММ.ГГГГ):", reply_markup=get_back_to_main_keyboard()
-    )
-    await state.set_state(UserStates.waiting_for_second_date)
-
-
-@router.message(UserStates.waiting_for_second_date)
-@catch_errors()
-async def handle_second_date(message: types.Message, state: FSMContext):
-    second_date = message.text.strip()
-    if not validate_date(second_date):
-        await message.answer(MessagesData.ERROR_INVALID_DATE)
-        return
-
-    data = await state.get_data()
-    first_date = data.get("first_date")
-    first_number = calculate_life_path_number(first_date)
-    second_number = calculate_life_path_number(second_date)
-
-    score = 3
-    description = "Низкая совместимость. Потребуется много усилий."
-    diff = abs(first_number - second_number)
-    if diff == 0:
-        score, description = 9, "Идеальная совместимость! Вы очень похожи по характеру."
-    elif diff <= 2:
-        score, description = 7, "Хорошая совместимость. Вы дополняете друг друга."
-    elif diff <= 4:
-        score, description = 5, "Средняя совместимость. Требуется понимание и компромиссы."
-
-    result_text = (
-        f"💑 СОВМЕСТИМОСТЬ: {first_number} и {second_number}\nОценка: {score}/9\n{description}"
-    )
-    await message.answer(result_text, reply_markup=get_compatibility_result_keyboard())
-    await state.clear()
-
-
-# ===========================
 # Профиль и инфо
 # ===========================
 
 
-@router.message(lambda m: m.text == TextCommandsData.PROFILE)
+@router.message(F.text == TextCommandsData.PROFILE)
 @catch_errors()
-async def profile_command(message: types.Message):
+async def profile_command(message: Message):
     user_id = message.from_user.id
     user_data = user_storage.get_user(user_id)
     usage_stats = user_storage.get_usage_stats(user_id)
@@ -287,63 +166,31 @@ async def profile_command(message: types.Message):
     await message.answer(profile_text, reply_markup=get_profile_keyboard(has_calculated))
 
 
-@router.message(lambda m: m.text == TextCommandsData.ABOUT)
+@router.message(F.text == TextCommandsData.ABOUT)
 @catch_errors()
-async def about_command(message: types.Message):
+async def about_command(message: Message):
     await message.answer(MessagesData.ABOUT_DESCRIPTION, reply_markup=get_about_keyboard())
 
 
 @router.message(Command(CommandsData.MENU))
 @catch_errors()
-async def menu_command(message: types.Message):
+async def menu_command(message: Message):
     await message.answer(MessagesData.MAIN_MENU, reply_markup=get_main_menu_keyboard())
 
 
 @router.message(Command(CommandsData.HELP))
 @catch_errors()
-async def help_command(message: types.Message):
+async def help_command(message: Message):
     await message.answer(MessagesData.HELP)
 
 
 @router.message()
 @catch_errors()
-async def unknown_message(message: types.Message):
+async def unknown_message(message: Message):
     await message.answer(MessagesData.UNKNOWN)
 
 
 @router.message(Command(CommandsData.PREMIUM_INFO))
 @catch_errors()
-async def premium_info_command(message: types.Message):
+async def premium_info_command(message: Message):
     await message.answer(MessagesData.PREMIUM_INFO_TEXT, reply_markup=get_premium_info_keyboard())
-
-
-@router.message(Command(CommandsData.FEEDBACK))
-@catch_errors()
-async def feedback_command(message: types.Message, state: FSMContext):
-    await message.answer(MessagesData.FEEDBACK, reply_markup=get_feedback_keyboard())
-    await state.set_state(UserStates.waiting_for_feedback)
-
-
-@router.message(lambda m: m.text == TextCommandsData.FEEDBACK)
-@catch_errors()
-async def feedback_button_command(message: types.Message, state: FSMContext):
-    await message.answer(MessagesData.FEEDBACK_PROMPT, reply_markup=get_feedback_keyboard())
-    await state.set_state(UserStates.waiting_for_feedback)
-
-
-@router.message(UserStates.waiting_for_feedback)
-@catch_errors()
-async def handle_feedback(message: types.Message, state: FSMContext):
-    user_id = message.from_user.id
-
-    if not security_validator.rate_limit_check(user_id, "feedback"):
-        await message.answer(
-            MessagesData.ERROR_FEEDBACK_LIMIT, reply_markup=get_back_to_main_keyboard()
-        )
-        await state.clear()
-        return
-
-    # Сохранение в базу или отправка админу
-    # feedback_text = message.text.strip()  # Будет использовано при реализации сохранения
-    await message.answer(MessagesData.FEEDBACK_SUCCESS, reply_markup=get_feedback_keyboard())
-    await state.clear()

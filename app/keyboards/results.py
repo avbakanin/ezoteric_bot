@@ -19,7 +19,7 @@ def get_result_keyboard() -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(
-                    text="📋 Посмотреть снова", callback_data=CallbackData.VIEW_SOUL_NUMBER_AGAIN
+                    text="📋 Посмотреть снова", callback_data=CallbackData.LIFE_PATH_NUMBER_AGAIN
                 )
             ],
             [InlineKeyboardButton(text="↩️ В главное меню", callback_data=CallbackData.BACK_MAIN)],

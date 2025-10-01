@@ -22,10 +22,10 @@ class CallbackData:
     SUGGESTION: str = "suggestion"
     REPORT_BUG: str = "report_bug"
     DIARY_OBSERVATION: str = "diary_observation"
-    CALCULATE_NUMBER: str = "calculate_number"
+    LIFE_PATH_NUMBER: str = "LIFE_PATH_NUMBER"
     BACK_ABOUT: str = "back_about"
     BACK_MAIN: str = "back_main"
-    VIEW_SOUL_NUMBER_AGAIN: str = "view_soul_number_again"
+    LIFE_PATH_NUMBER_AGAIN: str = "life_path_number_again"
     PREMIUM_COMPATIBILITY: str = "premium_compatibility"
     PREMIUM_FULL: str = "premium_full"
     PREMIUM_INFO: str = "premium_info"
@@ -37,11 +37,12 @@ class CallbackData:
 class TextCommandsData:
     """Константы для текстовых команд из message.text"""
 
-    CALCULATE_NUMBER: str = "🧮 Рассчитать Число Судьбы"
-    COMPATIBILITY: str = "💑 Проверить Совместимость"
-    PROFILE: str = "📊 Мой Профиль"
     ABOUT: str = "ℹ️ О боте"
+    PROFILE: str = "📊 Мой Профиль"
     FEEDBACK: str = "📝 Оставить отзыв"
+    COMPATIBILITY: str = "💑 Проверить Совместимость"
+    LIFE_PATH_NUMBER: str = "🧮 Рассчитать Число Судьбы"
+    DIARY_OBSERVATION: str = "📔 Дневник наблюдений"
 
 
 class MessagesData:

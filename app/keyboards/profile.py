@@ -14,7 +14,7 @@ def get_profile_keyboard(has_calculated: bool = False) -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="🧮 Рассчитать число", callback_data=CallbackData.CALCULATE_NUMBER
+                    text="🧮 Рассчитать число", callback_data=CallbackData.LIFE_PATH_NUMBER
                 )
             ],
             [InlineKeyboardButton(text="↩️ В главное меню", callback_data=CallbackData.BACK_MAIN)],

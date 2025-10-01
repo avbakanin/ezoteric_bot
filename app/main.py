@@ -1,7 +1,3 @@
-"""
-Основной файл нумерологического бота
-"""
-
 import asyncio
 import logging
 
@@ -10,10 +6,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from scheduler import get_scheduler
 from settings import config
 
-from handlers.back import router as back_router
-from handlers.features import router as features_router
-from handlers.handlers import router as handlers_router
-from handlers.premium import router as premium_router
+from handlers import setup_routers
 
 # Настройка логирования
 logging.basicConfig(
@@ -28,7 +21,7 @@ storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 
 
-async def on_startup(dp):
+async def on_startup():
     """
     Функция, выполняемая при запуске бота
     """
@@ -51,7 +44,7 @@ async def on_startup(dp):
         logger.error(f"Ошибка при запуске бота: {e}")
 
 
-async def on_shutdown(dp):
+async def on_shutdown():
     """
     Функция, выполняемая при остановке бота
     """
@@ -73,10 +66,8 @@ def main():
     Главная функция
     """
     try:
-        dp.include_router(handlers_router)
-        dp.include_router(back_router)
-        dp.include_router(features_router)
-        dp.include_router(premium_router)
+        setup_routers(dp)
+
         logger.info("Обработчики зарегистрированы")
 
         # Запуск бота

@@ -1,4 +1,4 @@
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.types import CallbackQuery
 from keyboards import get_about_keyboard, get_main_menu_keyboard
 from messages import CallbackData, MessagesData
@@ -6,7 +6,7 @@ from messages import CallbackData, MessagesData
 router = Router()
 
 
-@router.callback_query(lambda c: c.data == CallbackData.BACK_MAIN)
+@router.callback_query(F.data == CallbackData.BACK_MAIN)
 async def back_main_handler(callback_query: CallbackQuery):
     await callback_query.answer()
     await callback_query.message.edit_text(MessagesData.MAIN_MENU)
@@ -15,7 +15,7 @@ async def back_main_handler(callback_query: CallbackQuery):
     )
 
 
-@router.callback_query(lambda c: c.data == CallbackData.BACK_ABOUT)
+@router.callback_query(F.data == CallbackData.BACK_ABOUT)
 async def back_about_handler(callback_query: CallbackQuery):
     await callback_query.answer()
     await callback_query.message.edit_text(

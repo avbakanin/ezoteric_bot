@@ -83,6 +83,12 @@ class UserStorage:
         user.update(kwargs)
         self._save_data()
 
+    def get_today_diary_count(self, user_id: int) -> int:
+        user = self.get_user(user_id)
+        today = datetime.now().strftime("%Y-%m-%d")
+        observations = user.get("diary_observations", [])
+        return sum(1 for obs in observations if obs["date"].startswith(today))
+
     def _update_daily_cache_if_needed(self, user_id: int):
         """Сбрасывает дневные лимиты и кэш, если наступил новый день"""
         user = self._get_user(user_id)
