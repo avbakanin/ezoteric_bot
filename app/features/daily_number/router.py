@@ -18,7 +18,7 @@ from app.shared.messages import (
     format_daily_number,
 )
 from app.shared.storage import user_storage
-from app.shared.texts import get_text
+from app.shared.texts import get_number_texts, get_text
 
 router = Router()
 
@@ -42,7 +42,12 @@ async def _send_daily_number(send_func, user_id: int):
         text = cache.get("text", "")
     else:
         daily_number = calculate_daily_number()
-        text = get_text(daily_number, "daily", user_id)
+        number_texts = get_number_texts()
+        contexts = number_texts.get(str(daily_number), {}) if number_texts else {}
+        if not isinstance(contexts, dict):
+            contexts = {}
+        context_key = "premium_daily" if "premium_daily" in contexts else "daily"
+        text = get_text(daily_number, context_key, user_id)
         user_storage.set_daily_number_cache(user_id, today, daily_number, text)
 
     message_text = format_daily_number(today, daily_number, text)

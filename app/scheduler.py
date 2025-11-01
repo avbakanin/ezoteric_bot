@@ -190,11 +190,12 @@ class NotificationScheduler:
                 logger.warning(f"Нет текстов для числа дня {daily_number}")
                 return "Сегодня особенный день! Доверьтесь своей интуиции."
 
-            if "daily" not in number_texts[str(daily_number)]:
-                logger.warning(f"Нет контекста 'daily' для числа {daily_number}")
+            contexts = number_texts[str(daily_number)]
+            if not isinstance(contexts, dict):
+                logger.warning(f"Некорректный формат текстов для числа {daily_number}")
                 return "Сегодня особенный день! Доверьтесь своей интуиции."
 
-            options = number_texts[str(daily_number)]["daily"]
+            options = contexts.get("premium_daily") or contexts.get("daily")
 
             if not options:
                 logger.warning(f"Пустой список текстов для числа дня {daily_number}")

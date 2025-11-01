@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from app.settings import config
+from app.shared.security import is_admin
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,26 @@ class UserStorage:
             self.data[uid] = self._create_new_user()
         user = self.data[uid]
         user["last_activity"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        if is_admin(user_id):
+            admin_mode = user.get("admin_mode")
+            if admin_mode not in {"premium", "free"}:
+                admin_mode = "premium"
+                user["admin_mode"] = admin_mode
+
+            desired_active = admin_mode != "free"
+            subscription = user.setdefault(
+                "subscription",
+                {"active": False, "expires": None, "type": "free"},
+            )
+
+            if subscription.get("active") != desired_active:
+                subscription["active"] = desired_active
+                subscription["type"] = "premium" if desired_active else "free"
+                if desired_active:
+                    subscription.setdefault("expires", None)
+                self._save_data()
+
         return user
 
     def _create_new_user(self) -> Dict[str, Any]:
@@ -265,6 +286,8 @@ class UserStorage:
         user["subscription"]["active"] = active
         user["subscription"]["expires"] = expires
         user["subscription"]["type"] = "premium" if active else "free"
+        if is_admin(user_id):
+            user["admin_mode"] = "premium" if active else "free"
         self._save_data()
 
     def set_notifications(self, user_id: int, enabled: bool, time: str | None = None):
