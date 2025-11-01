@@ -37,6 +37,15 @@ router = Router()
 
 EXIT_WORDS = {"выход", "cancel", "отмена", "exit"}
 
+POPULAR_TIMEZONES = [
+    ("Europe/Moscow", "🇷🇺 Москва"),
+    ("Europe/Kaliningrad", "🇷🇺 Калининград"),
+    ("Europe/Samara", "🇷🇺 Самара"),
+    ("Asia/Yekaterinburg", "🇷🇺 Екатеринбург"),
+    ("Asia/Almaty", "🇰🇿 Алматы"),
+    ("America/New_York", "🇺🇸 Нью-Йорк"),
+]
+
 
 def _should_exit(text: str) -> bool:
     return text.strip().lower() in EXIT_WORDS
@@ -90,13 +99,12 @@ async def _prompt_timezone(message: Message, state: FSMContext) -> None:
     data = await state.get_data()
     existing_timezone = data.get("existing_timezone")
     if existing_timezone:
-        await message.answer(
-            MessagesData.NATAL_PROFILE_PROMPT_TIMEZONE_WITH_EXISTING.format(
-                timezone=existing_timezone
-            )
+        text = MessagesData.NATAL_PROFILE_PROMPT_TIMEZONE_WITH_EXISTING.format(
+            timezone=existing_timezone
         )
     else:
-        await message.answer(MessagesData.NATAL_PROFILE_PROMPT_TIMEZONE)
+        text = MessagesData.NATAL_PROFILE_PROMPT_TIMEZONE
+    await message.answer(text, reply_markup=_build_timezone_keyboard(existing_timezone))
     await state.set_state(NatalProfileStates.waiting_for_timezone)
 
 
@@ -151,6 +159,54 @@ def _serialize_candidates(candidates: list[GeocodeResult]) -> list[dict[str, Any
 
 def _deserialize_candidates(raw: list[dict[str, Any]]) -> list[GeocodeResult]:
     return [GeocodeResult.from_dict(item) for item in raw]
+
+
+def _build_timezone_keyboard(current: str | None = None) -> InlineKeyboardMarkup:
+    options = list(POPULAR_TIMEZONES)
+    if current and current not in {tz for tz, _ in options}:
+        options.insert(0, (current, "🟢 Текущий"))
+
+    buttons: list[InlineKeyboardButton] = []
+    for tz, label in options:
+        if label.startswith("🟢"):
+            text = f"{label}: {tz}"
+        else:
+            text = f"{label} ({tz})"
+        buttons.append(
+            InlineKeyboardButton(
+                text=text,
+                callback_data=f"{CallbackData.NATAL_TIMEZONE_PREFIX}{tz}",
+            )
+        )
+
+    rows = [buttons[i : i + 2] for i in range(0, len(buttons), 2)]
+    rows.append(
+        [InlineKeyboardButton(text="Другое…", callback_data=CallbackData.NATAL_TIMEZONE_MANUAL)]
+    )
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+async def _apply_timezone(message: Message, state: FSMContext, timezone: str) -> None:
+    await _update_collected(state, timezone=timezone)
+
+    data = await state.get_data()
+    collected = data.get("collected", {})
+    utc_offset = _compute_utc_offset(
+        collected.get("birth_date"),
+        collected.get("birth_time"),
+        timezone,
+    )
+    await _update_collected(state, utc_offset=utc_offset)
+
+    offset_hint = ""
+    if utc_offset is not None:
+        sign = "+" if utc_offset >= 0 else ""
+        offset_hint = f" (UTC{sign}{utc_offset:.1f})"
+
+    await message.answer(
+        MessagesData.NATAL_PROFILE_TIMEZONE_SAVED.format(timezone=timezone, offset_hint=offset_hint)
+    )
+    await _save_profile_and_finish(message, state)
 
 
 async def _save_profile_and_finish(message: Message, state: FSMContext) -> None:
@@ -468,6 +524,32 @@ async def handle_place_reenter(callback: CallbackQuery, state: FSMContext):
     await state.set_state(NatalProfileStates.waiting_for_place)
 
 
+@router.callback_query(NatalProfileStates.waiting_for_timezone, F.data == CallbackData.NATAL_TIMEZONE_MANUAL)
+@catch_errors()
+async def handle_timezone_manual(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+    await callback.message.edit_reply_markup(None)
+    await callback.message.answer(MessagesData.NATAL_PROFILE_TIMEZONE_MANUAL_PROMPT)
+
+
+@router.callback_query(
+    NatalProfileStates.waiting_for_timezone,
+    F.data.startswith(CallbackData.NATAL_TIMEZONE_PREFIX),
+)
+@catch_errors()
+async def handle_timezone_choice(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+    timezone = callback.data[len(CallbackData.NATAL_TIMEZONE_PREFIX) :]
+    try:
+        timezone = validate_timezone(timezone)
+    except ValueError:
+        await callback.message.answer(MessagesData.NATAL_PROFILE_INVALID_TIMEZONE)
+        return
+
+    await callback.message.edit_reply_markup(None)
+    await _apply_timezone(callback.message, state, timezone)
+
+
 @router.message(NatalProfileStates.waiting_for_timezone)
 @catch_errors()
 async def handle_timezone(message: Message, state: FSMContext):
@@ -483,25 +565,6 @@ async def handle_timezone(message: Message, state: FSMContext):
         await message.answer(MessagesData.NATAL_PROFILE_INVALID_TIMEZONE)
         return
 
-    await _update_collected(state, timezone=timezone)
-
-    data = await state.get_data()
-    collected = data.get("collected", {})
-    utc_offset = _compute_utc_offset(
-        collected.get("birth_date"),
-        collected.get("birth_time"),
-        timezone,
-    )
-    await _update_collected(state, utc_offset=utc_offset)
-
-    offset_hint = ""
-    if utc_offset is not None:
-        sign = "+" if utc_offset >= 0 else ""
-        offset_hint = f" (UTC{sign}{utc_offset:.1f})"
-
-    await message.answer(
-        MessagesData.NATAL_PROFILE_TIMEZONE_SAVED.format(timezone=timezone, offset_hint=offset_hint)
-    )
-    await _save_profile_and_finish(message, state)
+    await _apply_timezone(message, state, timezone)
 
 

@@ -1,1 +1,51 @@
-{}
+{
+  "1512454100": {
+    "birth_date": "10.08.1991",
+    "birth_time": "09:10",
+    "timezone": "Europe/Moscow",
+    "utc_offset": 3.0,
+    "lat": 55.625578,
+    "lon": 37.6063916,
+    "place_name": "Москва, Центральный федеральный округ, Россия",
+    "age": 34,
+    "life_path_number": null,
+    "soul_number": null,
+    "subscription": {
+      "active": true,
+      "expires": null,
+      "type": "premium"
+    },
+    "usage_stats": {
+      "daily_requests": 0,
+      "compatibility_checks": 0,
+      "repeat_views": 0,
+      "requests": 0,
+      "last_reset": "2025-11-01"
+    },
+    "daily_cache": {
+      "date": null,
+      "life_path_result": null,
+      "soul_number_result": null,
+      "daily_number_result": null,
+      "birth_date": null
+    },
+    "notifications": {
+      "enabled": true,
+      "time": "11:00"
+    },
+    "text_history": [
+      "💎 День подходит для расширения круга общения. Познакомьтесь с человеком из творческой индустрии и предложите совместную коллаборацию."
+    ],
+    "affirmation_history": [],
+    "last_daily_notification": null,
+    "daily_number": {
+      "date": "2025-11-01",
+      "number": 3,
+      "text": "💎 День подходит для расширения круга общения. Познакомьтесь с человеком из творческой индустрии и предложите совместную коллаборацию."
+    },
+    "retro_alerts": {},
+    "created_at": "2025-11-01 21:19:03",
+    "last_activity": "2025-11-01 21:21:01",
+    "admin_mode": "premium"
+  }
+}
