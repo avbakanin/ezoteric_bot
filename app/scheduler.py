@@ -5,13 +5,16 @@
 import asyncio
 import datetime
 import logging
-from typing import Any, Dict, List
+from collections import Counter
+from datetime import timedelta
+from typing import Any, Dict, List, Tuple
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 
 from app.settings import config
 from app.shared.calculations import calculate_daily_number
+from app.shared.messages import DiaryMessages
 from app.shared.storage import user_storage
 from app.shared.texts import get_number_texts
 
@@ -29,6 +32,7 @@ class NotificationScheduler:
         self.target_hour = target_hour  # Время отправки уведомлений
         self.target_minute = target_minute
         self.last_sent_date = None
+        self.last_digest_week: Tuple[int, int] | None = None
         self.max_retries = 3
         self.retry_delay = 5  # секунды
 
@@ -77,6 +81,10 @@ class NotificationScheduler:
             # Ждем минуту, чтобы не отправлять несколько раз
             await asyncio.sleep(60)
 
+        if now.weekday() == 0 and self.last_digest_week != now.isocalendar()[:2]:
+            await self._send_weekly_digests(now)
+            self.last_digest_week = now.isocalendar()[:2]
+
     async def _send_daily_notifications(self, now: datetime.datetime):
         """
         Отправляет ежедневные уведомления всем пользователям
@@ -118,6 +126,56 @@ class NotificationScheduler:
                 logger.error(f"Ошибка отправки уведомления пользователю {user['user_id']}: {e}")
 
         logger.info(f"Уведомления отправлены: {success_count} успешно, {error_count} ошибок")
+
+    async def _send_weekly_digests(self, now: datetime.datetime):
+        """Отправляет еженедельный дайджест дневника наблюдений."""
+
+        start_period = (now - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)
+        end_period = now
+
+        users = user_storage.get_all_users().items()
+        if not users:
+            return
+
+        for user_id_str, user_data in users:
+            try:
+                user_id = int(user_id_str)
+            except ValueError:
+                continue
+
+            entries = user_storage.get_diary_entries_in_range(user_id, start_period, end_period)
+            subscription = user_data.get("subscription", {})
+            is_premium = bool(subscription.get("active"))
+
+            if not entries:
+                try:
+                    await self.bot.send_message(
+                        user_id,
+                        f"{DiaryMessages.DIGEST_NO_ENTRIES}\n\n{DiaryMessages.DIGEST_REMINDER}",
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    logger.debug("Не удалось отправить пустой дайджест %s: %s", user_id, exc)
+                continue
+
+            categories = [entry.get("category") or "Без темы" for entry in entries]
+            counter = Counter(categories)
+            top_categories = ", ".join(
+                f"{name} ({count})" for name, count in counter.most_common(3)
+            )
+
+            message_lines = [
+                DiaryMessages.DIGEST_TITLE.format(count=len(entries), top_categories=top_categories or "Без темы"),
+            ]
+
+            if not is_premium:
+                message_lines.append(DiaryMessages.HISTORY_PREMIUM_PROMO)
+
+            message_lines.append(DiaryMessages.DIGEST_REMINDER)
+
+            try:
+                await self.bot.send_message(user_id, "\n\n".join(message_lines))
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("Не удалось отправить дайджест %s: %s", user_id, exc)
 
     async def _send_notification_to_user(self, user: Dict[str, Any], daily_number: int):
         """

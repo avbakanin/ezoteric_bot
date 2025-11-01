@@ -11,6 +11,7 @@ from .affirmation import get_affirmation_keyboard
 
 # Общие клавиатуры
 from .common import get_yes_no_keyboard
+from .diary import get_diary_category_keyboard, get_diary_result_keyboard
 
 # Обратная связь
 from .feedback import get_feedback_keyboard
@@ -46,6 +47,8 @@ __all__ = [
     "get_premium_info_keyboard",
     # Обратная связь
     "get_feedback_keyboard",
+    "get_diary_category_keyboard",
+    "get_diary_result_keyboard",
     # Общие
     "get_yes_no_keyboard",
     # Аффирмации

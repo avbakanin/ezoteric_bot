@@ -337,6 +337,22 @@ class UserStorage:
         """Возвращает всех пользователей"""
         return self.data
 
+    def get_diary_entries_in_range(self, user_id: int, start: datetime, end: datetime) -> list[dict[str, Any]]:
+        user = self.get_user(user_id)
+        entries = user.get("diary_observations", [])
+        result = []
+        for entry in entries:
+            date_str = entry.get("date")
+            if not date_str:
+                continue
+            try:
+                entry_datetime = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                continue
+            if start <= entry_datetime <= end:
+                result.append(entry)
+        return result
+
     # -------------------------
     # Уведомления
     # -------------------------
