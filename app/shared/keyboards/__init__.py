@@ -6,6 +6,9 @@
 # Информация о боте
 from .about import get_about_keyboard
 
+# Аффирмации
+from .affirmation import get_affirmation_keyboard
+
 # Общие клавиатуры
 from .common import get_yes_no_keyboard
 
@@ -45,4 +48,6 @@ __all__ = [
     "get_feedback_keyboard",
     # Общие
     "get_yes_no_keyboard",
+    # Аффирмации
+    "get_affirmation_keyboard",
 ]

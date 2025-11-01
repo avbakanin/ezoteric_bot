@@ -1,4 +1,8 @@
+from typing import Iterable
+
 from app.settings import config
+
+from .calculations import AffirmationResult
 
 
 class CommandsData:
@@ -7,6 +11,7 @@ class CommandsData:
     START: str = "start"
     YES_NO: str = "yes_no"
     NAME_NUMBER: str = "name_number"
+    DAILY_NUMBER: str = "daily_number"
     MENU: str = "menu"
     HELP: str = "help"
     PREMIUM_INFO: str = "premium_info"
@@ -14,6 +19,7 @@ class CommandsData:
     FEEDBACK: str = "feedback"
     FEEDBACK: str = "feedback"
     FEEDBACK: str = "feedback"
+    PREMIUM_ADMIN: str = "premium"
 
 
 class CallbackData:
@@ -22,6 +28,7 @@ class CallbackData:
     YES: str = "yes"
     NO: str = "no"
     AFFIRMATION: str = "affirmation"
+    AFFIRMATION_NEW: str = "affirmation_new"
     FEEDBACK: str = "feedback"
     LEAVE_FEEDBACK: str = "leave_feedback"
     SUGGESTION: str = "suggestion"
@@ -51,6 +58,7 @@ class TextCommandsData:
     COMPATIBILITY: str = "💑 Проверить Совместимость"
     LIFE_PATH_NUMBER: str = "🧮 Рассчитать Число Судьбы"
     DIARY_OBSERVATION: str = "📔 Дневник наблюдений"
+    DAILY_NUMBER: str = "🌞 Число Дня"
 
 
 class MessagesData:
@@ -129,6 +137,25 @@ class MessagesData:
         "🔔 Уведомления включены. Первое сообщение придёт в {time}."
     )
     NOTIFICATIONS_TOGGLE_OFF: str = "🔕 Уведомления выключены."
+    DAILY_NUMBER_PREMIUM_REQUIRED: str = (
+        "🔒 Полный прогноз по числу дня доступен только в Premium.\n"
+        "Оформите подписку, чтобы получать персональные рекомендации каждый день."
+    )
+    DAILY_NUMBER_TITLE: str = "🌞 ЧИСЛО ДНЯ"
+
+    # Администрирование
+    ADMIN_ACCESS_DENIED: str = "⛔ Эта команда доступна только администраторам."
+    ADMIN_PREMIUM_USAGE: str = (
+        "⚙️ Управление Premium\n"
+        "Использование: /premium [user_id] [on|off|toggle|status]\n"
+        "По умолчанию команда переключает ваш статус."
+    )
+    ADMIN_PREMIUM_STATUS: str = (
+        "👤 Пользователь {user_id}: {status}."
+    )
+    ADMIN_PREMIUM_UPDATED: str = (
+        "✅ Premium для пользователя {user_id} теперь {status}."
+    )
 
     # Premium
     PREMIUM_SOON: str = "💎 ОФОРМЛЕНИЕ PREMIUM ПОДПИСКИ\n\nСкоро будет доступно!"
@@ -266,8 +293,69 @@ def get_profile_text(
     )
 
 
-def get_affirmation_text(text: str) -> str:
-    return f"✨ Твоя аффирмация:\n{text}"
+_REFLECTION_PROMPTS: tuple[str, ...] = (
+    "Что ты чувствуешь, когда произносишь эту аффирмацию?",
+    "Какое маленькое действие сегодня поддержит эту мысль?",
+    "Кому ты можешь подарить такую же поддержку сегодня?",
+    "Запиши одно наблюдение в дневник после практики.",
+)
+
+
+def _select_prompt(number: int | None) -> str:
+    if not _REFLECTION_PROMPTS:
+        return "Поделись ощущениями в дневнике, чтобы закрепить аффирмацию."
+    base = number if isinstance(number, int) else 0
+    index = abs(base) % len(_REFLECTION_PROMPTS)
+    return _REFLECTION_PROMPTS[index]
+
+
+def _format_history_preview(history: Iterable[dict[str, str | int | None]], current_text: str, limit: int) -> str | None:
+    preview: list[str] = []
+    for entry in reversed(list(history)):
+        if not entry:
+            continue
+        text = entry.get("text") if isinstance(entry, dict) else None
+        if not text or text == current_text:
+            continue
+        preview.append(f"• {text}")
+        if len(preview) >= limit:
+            break
+    if not preview:
+        return None
+    preview.reverse()
+    return "📚 Недавние аффирмации:\n" + "\n".join(preview)
+
+
+def get_affirmation_text(result: AffirmationResult) -> str:
+    title = "✨ Новая аффирмация" if result.is_new else "✨ Аффирмация дня"
+    intro = f"🔢 Энергия числа: {result.number}" if result.number else None
+    prompt = _select_prompt(result.number)
+    history_limit = 3 if result.is_premium_user else 1
+    history_block = _format_history_preview(result.history, result.text, history_limit)
+    status_line = None
+
+    if not result.is_new and not result.was_forced:
+        status_line = "🔁 Ты уже получил эту аффирмацию сегодня."
+    elif result.was_forced and result.is_premium_user:
+        status_line = "💎 Premium: сгенерирована дополнительная аффирмация."
+
+    outro = (
+        "💎 Premium открывает тематические подборки и новые аффирмации."
+        if not result.is_premium_user
+        else "📔 Сохраните ощущение в дневнике, чтобы усилить практику."
+    )
+
+    blocks = [title, result.text]
+    if intro:
+        blocks.append(intro)
+    if status_line:
+        blocks.append(status_line)
+    if history_block:
+        blocks.append(history_block)
+    blocks.append(f"📝 Попробуй: {prompt}")
+    blocks.append(outro)
+
+    return "\n\n".join(blocks)
 
 
 def format_yes_no_response(question: str, answer: str) -> str:
@@ -282,3 +370,12 @@ def format_name_number_response(name: str, number: int, description: str) -> str
         "🔤 Число имени для «{name}»: {number}\n\n"
         "{description}"
     ).format(name=name, number=number, description=description)
+
+
+def format_daily_number(date: str, daily_number: int, text: str) -> str:
+    return (
+        "{title}\n\n"
+        "📅 Дата: {date}\n"
+        "🔢 Число: {number}\n\n"
+        "{text}"
+    ).format(title=MessagesData.DAILY_NUMBER_TITLE, date=date, number=daily_number, text=text)

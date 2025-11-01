@@ -18,6 +18,7 @@ def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
             [KeyboardButton(text=TextCommandsData.LIFE_PATH_NUMBER)],
             [KeyboardButton(text=TextCommandsData.NAME_NUMBER)],
             [KeyboardButton(text=TextCommandsData.YES_NO)],
+            [KeyboardButton(text=TextCommandsData.DAILY_NUMBER)],
             [KeyboardButton(text=TextCommandsData.COMPATIBILITY)],
             [KeyboardButton(text=TextCommandsData.PROFILE)],
             [KeyboardButton(text=TextCommandsData.ABOUT)],

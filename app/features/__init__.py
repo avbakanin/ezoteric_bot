@@ -2,9 +2,11 @@
 
 from aiogram import Dispatcher
 
+from .admin.router import router as admin_router
 from .affirmation.router import router as affirmation_router
 from .base.router import router as base_router
 from .compatibility.router import router as compatibility_router
+from .daily_number.router import router as daily_number_router
 from .diary.router import router as diary_router
 from .feedback.router import router as feedback_router
 from .life_path.router import router as life_path_router
@@ -17,6 +19,7 @@ from .yes_no.router import router as yes_no_router
 
 def setup_routers(dp: Dispatcher) -> None:
     routers = [
+        admin_router,
         navigation_router,
         profile_router,
         diary_router,
@@ -26,6 +29,7 @@ def setup_routers(dp: Dispatcher) -> None:
         life_path_router,
         name_number_router,
         yes_no_router,
+        daily_number_router,
         premium_router,
         base_router,
     ]

@@ -54,6 +54,21 @@ class BotConfig:
         self.RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "10"))
         self.MAX_INPUT_LENGTH = int(os.getenv("MAX_INPUT_LENGTH", "1000"))
 
+        # Администраторы
+        admin_ids_raw = os.getenv("ADMIN_USER_IDS", "")
+        admin_ids: set[int] = set()
+        if admin_ids_raw:
+            candidates = admin_ids_raw.replace(";", ",").split(",")
+            for candidate in candidates:
+                value = candidate.strip()
+                if not value:
+                    continue
+                try:
+                    admin_ids.add(int(value))
+                except ValueError:
+                    logger.warning("Некорректный идентификатор администратора: %s", value)
+        self.ADMIN_USER_IDS = admin_ids
+
         # Настройки логирования
         self.LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
         self.LOG_FILE = os.getenv("LOG_FILE", "bot.log")
@@ -74,6 +89,7 @@ class BotConfig:
             "MAX_MESSAGE_LENGTH": self.MAX_MESSAGE_LENGTH,
             "MAX_RETRIES": self.MAX_RETRIES,
             "RETRY_DELAY": self.RETRY_DELAY,
+            "ADMIN_USER_IDS": sorted(self.ADMIN_USER_IDS),
             "RATE_LIMIT_PER_MINUTE": self.RATE_LIMIT_PER_MINUTE,
             "MAX_INPUT_LENGTH": self.MAX_INPUT_LENGTH,
             "LOG_LEVEL": self.LOG_LEVEL,
@@ -96,3 +112,4 @@ SUBSCRIPTION_DURATION = config.SUBSCRIPTION_DURATION
 MAX_MESSAGE_LENGTH = config.MAX_MESSAGE_LENGTH
 MAX_RETRIES = config.MAX_RETRIES
 RETRY_DELAY = config.RETRY_DELAY
+ADMIN_USER_IDS = config.ADMIN_USER_IDS

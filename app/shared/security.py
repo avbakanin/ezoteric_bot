@@ -3,6 +3,8 @@ import logging
 from datetime import datetime
 from typing import Dict
 
+from app.settings import config
+
 logger = logging.getLogger(__name__)
 
 
@@ -132,3 +134,12 @@ class SecurityValidator:
 
 # Глобальный экземпляр валидатора
 security_validator = SecurityValidator()
+
+
+def is_admin(user_id: int) -> bool:
+    """Проверяет, является ли пользователь администратором."""
+
+    try:
+        return int(user_id) in config.ADMIN_USER_IDS
+    except Exception:
+        return False

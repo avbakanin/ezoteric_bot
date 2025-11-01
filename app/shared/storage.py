@@ -74,6 +74,11 @@ class UserStorage:
             "text_history": [],
             "affirmation_history": [],
             "last_daily_notification": None,
+            "daily_number": {
+                "date": None,
+                "number": None,
+                "text": None,
+            },
             "created_at": now,
             "last_activity": now,
         }
@@ -333,6 +338,19 @@ class UserStorage:
         """Отмечает, что уведомление пользователю уже отправлено сегодня."""
         user = self.get_user(user_id)
         user["last_daily_notification"] = datetime.now().strftime("%Y-%m-%d")
+        self._save_data()
+
+    def get_daily_number_cache(self, user_id: int) -> dict[str, Any]:
+        user = self.get_user(user_id)
+        return user.get("daily_number", {})
+
+    def set_daily_number_cache(self, user_id: int, date: str, number: int, text: str):
+        user = self.get_user(user_id)
+        user["daily_number"] = {
+            "date": date,
+            "number": number,
+            "text": text,
+        }
         self._save_data()
 
 

@@ -28,6 +28,7 @@ pip install -r requirements-dev.txt
 BOT_TOKEN=your_telegram_bot_token_here
 DATABASE_URL=sqlite:///numerology_bot.db
 NOTIFICATION_TIME=11:00  # или другое время в формате HH:MM
+ADMIN_USER_IDS=123456789  # ID администраторов через запятую
 
 # Запуск сервера
 python main.py
@@ -43,6 +44,14 @@ poe run
 - `NOTIFICATION_TIME` — время ежедневных уведомлений (по умолчанию 11:00)
 - `FREE_DAILY_LIMIT` — лимит запросов для бесплатных пользователей
 - `SUBSCRIPTION_PRICE` — цена подписки (299₽/месяц)
+- `ADMIN_USER_IDS` — список администраторов с доступом к служебным командам
+
+### Админ-команды
+
+- `/premium [user_id] [on|off|toggle|status]` — управление подпиской пользователя.
+  - Параметр `user_id` необязателен, по умолчанию используется ID отправителя.
+  - Без действия команда переключает текущий статус (toggle).
+  - Доступна только пользователям из `ADMIN_USER_IDS`.
 
 ### Тестирование
 
