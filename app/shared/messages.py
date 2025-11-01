@@ -24,6 +24,7 @@ class CommandsData:
     ASTRO_FORECAST: str = "astro_forecast"
     ASTRO_FORECAST_HISTORY: str = "astro_forecast_history"
     RETRO_ALERTS: str = "retro_alerts"
+    ASPECT_OF_DAY: str = "aspect_of_day"
 
 
 class CallbackData:
@@ -68,7 +69,7 @@ class TextCommandsData:
     ASTRO_FORECAST: str = "🌠 Астропрогноз"
     ASTRO_FORECAST_HISTORY: str = "🕰 Вчерашний прогноз"
     RETRO_ALERTS: str = "♻️ Ретроградный сигнал"
-    ASTRO_FORECAST_HISTORY: str = "🕰 Вчерашний прогноз"
+    ASPECT_OF_DAY: str = "🌟 Аспект дня"
 
 
 class MessagesData:
@@ -134,6 +135,9 @@ class MessagesData:
     )
     RETRO_ALERTS_PREMIUM_ONLY: str = (
         "🔓 Рекомендуем оформить Premium, чтобы получать расширенные подсказки и стратегии на период ретроградности."
+    )
+    ASPECT_OF_DAY_PREMIUM_PROMO: str = (
+        "🔒 Полный разбор дня с рекомендациями и ретро-пометками доступен в Premium."
     )
     NATAL_PROFILE_PROMPT_DATE: str = (
         "🌌 Чтобы продолжить, отправьте дату рождения в формате YYYY-MM-DD или ДД.ММ.ГГГГ.\n"

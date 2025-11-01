@@ -1,5 +1,6 @@
 """Астрологические утилиты."""
 
+from .aspect_of_day import AspectOfDay, AspectOfDayService, aspect_of_day_service
 from .ephemeris import EphemerisService, ephemeris_service
 from .forecast import DailyTransitService, ForecastResult, daily_transit_service
 from .interpretation import RenderedAspect, TransitInterpreter, transit_interpreter
@@ -20,6 +21,9 @@ __all__ = [
     "RetrogradeService",
     "retrograde_service",
     "RetroPeriod",
+    "AspectOfDayService",
+    "aspect_of_day_service",
+    "AspectOfDay",
 ]
 
 

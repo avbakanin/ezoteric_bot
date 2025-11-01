@@ -19,6 +19,7 @@ def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
             [KeyboardButton(text=TextCommandsData.NAME_NUMBER)],
             [KeyboardButton(text=TextCommandsData.YES_NO)],
             [KeyboardButton(text=TextCommandsData.DAILY_NUMBER)],
+            [KeyboardButton(text=TextCommandsData.ASPECT_OF_DAY)],
             [KeyboardButton(text=TextCommandsData.ASTRO_FORECAST)],
             [KeyboardButton(text=TextCommandsData.ASTRO_FORECAST_HISTORY)],
             [KeyboardButton(text=TextCommandsData.RETRO_ALERTS)],
