@@ -1,163 +1,5 @@
 {
-  "627875032": {
-    "birth_date": "15.01.1992",
-    "life_path_number": 1,
-    "soul_number": 6,
-    "subscription": {
-      "active": false,
-      "expires": null,
-      "type": "free"
-    },
-    "usage_stats": {
-      "daily_requests": 0,
-      "compatibility_checks": 0,
-      "repeat_views": 0,
-      "last_reset": "2025-09-30",
-      "requests": 1
-    },
-    "daily_cache": {
-      "date": null,
-      "life_path_result": null,
-      "soul_number_result": null,
-      "daily_number_result": null,
-      "birth_date": null
-    },
-    "notifications": {
-      "enabled": true,
-      "time": "09:00"
-    },
-    "text_history": [],
-    "affirmation_history": [],
-    "last_daily_notification": null,
-    "created_at": "2025-09-30 22:15:23",
-    "last_activity": "2025-09-30 23:09:07",
-    "daily_results": [
-      {
-        "birth_date": "15.01.1992",
-        "life_path_result": 1,
-        "soul_number": 6,
-        "timestamp": "2025-09-30T22:15:32.089415"
-      }
-    ],
-    "repeat_views": 4
-  },
-  "8367480117": {
-    "birth_date": null,
-    "life_path_number": null,
-    "soul_number": null,
-    "subscription": {
-      "active": false,
-      "expires": null,
-      "type": "free"
-    },
-    "usage_stats": {
-      "daily_requests": 0,
-      "compatibility_checks": 0,
-      "repeat_views": 0,
-      "last_reset": "2025-09-30",
-      "requests": 3
-    },
-    "daily_cache": {
-      "date": null,
-      "life_path_result": null,
-      "soul_number_result": null,
-      "daily_number_result": null,
-      "birth_date": null
-    },
-    "notifications": {
-      "enabled": true,
-      "time": "09:00"
-    },
-    "text_history": [],
-    "affirmation_history": [],
-    "last_daily_notification": null,
-    "created_at": "2025-09-30 22:15:50",
-    "last_activity": "2025-09-30 23:09:09"
-  },
-  "12345": {
-    "birth_date": null,
-    "life_path_number": null,
-    "soul_number": null,
-    "subscription": {
-      "active": false,
-      "expires": null,
-      "type": "free"
-    },
-    "usage_stats": {
-      "daily_requests": 0,
-      "compatibility_checks": 0,
-      "repeat_views": 0,
-      "last_reset": "2025-09-30"
-    },
-    "daily_cache": {
-      "date": null,
-      "life_path_result": null,
-      "soul_number_result": null,
-      "daily_number_result": null,
-      "birth_date": null
-    },
-    "notifications": {
-      "enabled": true,
-      "time": "09:00"
-    },
-    "text_history": [],
-    "affirmation_history": [
-      {
-        "number": 8,
-        "text": "Моя власть и влияние используются во благо.",
-        "date": "2025-09-30"
-      }
-    ],
-    "last_daily_notification": null,
-    "created_at": "2025-09-30 23:22:01",
-    "last_activity": "2025-09-30 23:22:01"
-  },
   "1512454100": {
-    "birth_date": "10.08.1991",
-    "life_path_number": 11,
-    "soul_number": 1,
-    "subscription": {
-      "active": false,
-      "expires": null,
-      "type": "free"
-    },
-    "usage_stats": {
-      "daily_requests": 0,
-      "compatibility_checks": 0,
-      "repeat_views": 0,
-      "last_reset": "2025-10-01",
-      "requests": 1
-    },
-    "daily_cache": {
-      "date": null,
-      "life_path_result": null,
-      "soul_number_result": null,
-      "daily_number_result": null,
-      "birth_date": null
-    },
-    "notifications": {
-      "enabled": true,
-      "time": "09:00"
-    },
-    "text_history": [
-      "Мастер-число 11 наделяет вас способностью видеть тонкие энергии и предугадывать события. Ваша миссия — вдохновлять и вести людей к осознанности."
-    ],
-    "affirmation_history": [],
-    "last_daily_notification": null,
-    "created_at": "2025-10-01 11:55:03",
-    "last_activity": "2025-10-01 11:55:21",
-    "daily_results": [
-      {
-        "birth_date": "10.08.1991",
-        "life_path_result": 11,
-        "soul_number": 1,
-        "text": "Мастер-число 11 наделяет вас способностью видеть тонкие энергии и предугадывать события. Ваша миссия — вдохновлять и вести людей к осознанности.",
-        "timestamp": "2025-10-01T11:55:10.757428"
-      }
-    ],
-    "repeat_views": 1
-  },
-  "7651594720": {
     "birth_date": null,
     "life_path_number": null,
     "soul_number": null,
@@ -167,11 +9,11 @@
       "type": "free"
     },
     "usage_stats": {
-      "daily_requests": 0,
+      "daily_requests": 1,
       "compatibility_checks": 0,
       "repeat_views": 0,
-      "last_reset": "2025-10-01",
-      "requests": 1
+      "requests": 0,
+      "last_reset": "2025-11-01"
     },
     "daily_cache": {
       "date": null,
@@ -187,7 +29,106 @@
     "text_history": [],
     "affirmation_history": [],
     "last_daily_notification": null,
-    "created_at": "2025-10-01 11:55:15",
-    "last_activity": "2025-10-01 11:55:15"
+    "created_at": "2025-11-01 10:10:19",
+    "last_activity": "2025-11-01 10:10:19"
+  },
+  "3334": {
+    "birth_date": null,
+    "life_path_number": null,
+    "soul_number": null,
+    "subscription": {
+      "active": false,
+      "expires": null,
+      "type": "free"
+    },
+    "usage_stats": {
+      "daily_requests": 0,
+      "compatibility_checks": 0,
+      "repeat_views": 0,
+      "requests": 0,
+      "last_reset": "2025-11-01"
+    },
+    "daily_cache": {
+      "date": null,
+      "life_path_result": null,
+      "soul_number_result": null,
+      "daily_number_result": null,
+      "birth_date": null
+    },
+    "notifications": {
+      "enabled": true,
+      "time": "09:00"
+    },
+    "text_history": [],
+    "affirmation_history": [],
+    "last_daily_notification": "2025-11-01",
+    "created_at": "2025-11-01 10:25:17",
+    "last_activity": "2025-11-01 10:25:17"
+  },
+  "84813": {
+    "birth_date": null,
+    "life_path_number": null,
+    "soul_number": null,
+    "subscription": {
+      "active": false,
+      "expires": null,
+      "type": "free"
+    },
+    "usage_stats": {
+      "daily_requests": 0,
+      "compatibility_checks": 0,
+      "repeat_views": 0,
+      "requests": 0,
+      "last_reset": "2025-11-01"
+    },
+    "daily_cache": {
+      "date": null,
+      "life_path_result": null,
+      "soul_number_result": null,
+      "daily_number_result": null,
+      "birth_date": null
+    },
+    "notifications": {
+      "enabled": true,
+      "time": "11:00"
+    },
+    "text_history": [],
+    "affirmation_history": [],
+    "last_daily_notification": null,
+    "created_at": "2025-11-01 10:32:49",
+    "last_activity": "2025-11-01 10:32:49"
+  },
+  "619767": {
+    "birth_date": null,
+    "life_path_number": null,
+    "soul_number": null,
+    "subscription": {
+      "active": false,
+      "expires": null,
+      "type": "free"
+    },
+    "usage_stats": {
+      "daily_requests": 0,
+      "compatibility_checks": 0,
+      "repeat_views": 0,
+      "requests": 0,
+      "last_reset": "2025-11-01"
+    },
+    "daily_cache": {
+      "date": null,
+      "life_path_result": null,
+      "soul_number_result": null,
+      "daily_number_result": null,
+      "birth_date": null
+    },
+    "notifications": {
+      "enabled": false,
+      "time": "11:00"
+    },
+    "text_history": [],
+    "affirmation_history": [],
+    "last_daily_notification": null,
+    "created_at": "2025-11-01 10:43:16",
+    "last_activity": "2025-11-01 10:43:16"
   }
 }

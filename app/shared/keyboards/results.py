@@ -1,0 +1,47 @@
+"""
+Клавиатуры для отображения результатов
+"""
+
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
+from ..messages import CallbackData
+
+
+def get_result_keyboard() -> InlineKeyboardMarkup:
+    """
+    Создает клавиатуру для результата расчета
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🔒 Полная расшифровка (Премиум)", callback_data=CallbackData.PREMIUM_FULL
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📋 Посмотреть снова", callback_data=CallbackData.LIFE_PATH_NUMBER_AGAIN
+                )
+            ],
+            [InlineKeyboardButton(text="↩️ В главное меню", callback_data=CallbackData.BACK_MAIN)],
+        ]
+    )
+    return keyboard
+
+
+def get_compatibility_result_keyboard() -> InlineKeyboardMarkup:
+    """
+    Создает клавиатуру для результата совместимости
+    """
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🔒 Детальный разбор (Премиум)",
+                    callback_data=CallbackData.PREMIUM_COMPATIBILITY,
+                )
+            ],
+            [InlineKeyboardButton(text="↩️ В главное меню", callback_data=CallbackData.BACK_MAIN)],
+        ]
+    )
+    return keyboard

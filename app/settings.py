@@ -32,7 +32,7 @@ class BotConfig:
         self.DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///numerology_bot.db")
 
         # Настройки уведомлений
-        self.NOTIFICATION_TIME = os.getenv("NOTIFICATION_TIME", "09:00")
+        self.NOTIFICATION_TIME = os.getenv("NOTIFICATION_TIME", "11:00")
 
         # Лимиты для бесплатных пользователей
         # Уменьшено до 2 запросов в день

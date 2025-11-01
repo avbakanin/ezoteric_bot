@@ -9,8 +9,11 @@ from typing import Any, Dict, List
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
-from calculations import calculate_daily_number
-from storage import user_storage
+
+from app.settings import config
+from app.shared.calculations import calculate_daily_number
+from app.shared.storage import user_storage
+from app.shared.texts import get_number_texts
 
 logger = logging.getLogger(__name__)
 
@@ -20,10 +23,11 @@ class NotificationScheduler:
     Класс для управления push-уведомлениями
     """
 
-    def __init__(self, bot: Bot, target_hour: int = 9):
+    def __init__(self, bot: Bot, target_hour: int = 11, target_minute: int = 0):
         self.bot = bot
         self.is_running = False
         self.target_hour = target_hour  # Время отправки уведомлений
+        self.target_minute = target_minute
         self.last_sent_date = None
         self.max_retries = 3
         self.retry_delay = 5  # секунды
@@ -33,7 +37,11 @@ class NotificationScheduler:
         Запускает планировщик уведомлений
         """
         self.is_running = True
-        logger.info(f"Планировщик уведомлений запущен (время отправки: {self.target_hour}:00)")
+        logger.info(
+            "Планировщик уведомлений запущен (время отправки: %02d:%02d)",
+            self.target_hour,
+            self.target_minute,
+        )
 
         while self.is_running:
             try:
@@ -58,14 +66,18 @@ class NotificationScheduler:
         today = now.date()
 
         # Проверяем, нужно ли отправлять уведомления
-        if now.hour == self.target_hour and now.minute == 0 and self.last_sent_date != today:
-            await self._send_daily_notifications()
+        if (
+            now.hour == self.target_hour
+            and now.minute == self.target_minute
+            and self.last_sent_date != today
+        ):
+            await self._send_daily_notifications(now)
             self.last_sent_date = today
 
             # Ждем минуту, чтобы не отправлять несколько раз
             await asyncio.sleep(60)
 
-    async def _send_daily_notifications(self):
+    async def _send_daily_notifications(self, now: datetime.datetime):
         """
         Отправляет ежедневные уведомления всем пользователям
         """
@@ -82,6 +94,18 @@ class NotificationScheduler:
         error_count = 0
 
         for user in users:
+            notifications = user.get("notifications", {})
+            notif_time = notifications.get("time")
+            if notif_time:
+                try:
+                    hour_str, minute_str = notif_time.split(":", 1)
+                    user_hour = int(hour_str)
+                    user_minute = int(minute_str)
+                except (ValueError, AttributeError):
+                    user_hour = self.target_hour
+                    user_minute = self.target_minute
+                if user_hour != self.target_hour or user_minute != self.target_minute:
+                    continue
             try:
                 await self._send_notification_to_user(user, daily_number)
                 success_count += 1
@@ -160,9 +184,6 @@ class NotificationScheduler:
         Получает текст для числа дня с учетом истории
         """
         try:
-            # Используем кэшированные тексты из handlers
-            from app.handlers.handlers import get_number_texts
-
             number_texts = get_number_texts()
 
             if str(daily_number) not in number_texts:
@@ -222,15 +243,15 @@ class NotificationScheduler:
             logger.error(f"Ошибка отправки тестового уведомления: {e}")
             return False
 
-    def set_notification_time(self, hour: int):
+    def set_notification_time(self, hour: int, minute: int = 0):
         """
         Устанавливает время отправки уведомлений
         """
-        if 0 <= hour <= 23:
-            self.target_hour = hour
-            logger.info(f"Время уведомлений изменено на {hour}:00")
-        else:
-            raise ValueError("Время должно быть от 0 до 23")
+        if not (0 <= hour <= 23 and 0 <= minute <= 59):
+            raise ValueError("Время должно быть в диапазоне 00:00-23:59")
+        self.target_hour = hour
+        self.target_minute = minute
+        logger.info("Время уведомлений изменено на %02d:%02d", hour, minute)
 
 
 # Глобальный экземпляр планировщика
@@ -243,5 +264,21 @@ def get_scheduler(bot: Bot) -> NotificationScheduler:
     """
     global scheduler
     if scheduler is None:
-        scheduler = NotificationScheduler(bot)
+        hour, minute = _parse_notification_time(config.NOTIFICATION_TIME)
+        scheduler = NotificationScheduler(bot, hour, minute)
     return scheduler
+
+
+def _parse_notification_time(value: str) -> tuple[int, int]:
+    try:
+        hour_str, minute_str = value.split(":", 1)
+        hour = int(hour_str)
+        minute = int(minute_str)
+    except (ValueError, AttributeError):
+        logger.warning("Некорректное значение NOTIFICATION_TIME: %s, используется 11:00", value)
+        return 11, 0
+
+    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+        logger.warning("NOTIFICATION_TIME вне диапазона: %s, используется 11:00", value)
+        return 11, 0
+    return hour, minute

@@ -1,12 +1,17 @@
 import asyncio
 import logging
+import sys
+from pathlib import Path
+
+if __package__ in (None, ""):
+    sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
-from scheduler import get_scheduler
-from settings import config
 
-from handlers import setup_routers
+from app.features import setup_routers
+from app.scheduler import get_scheduler
+from app.settings import config
 
 # Настройка логирования
 logging.basicConfig(
@@ -35,7 +40,7 @@ async def on_startup():
         logger.info("Планировщик уведомлений запущен")
 
         # Очищаем старые данные (старше 30 дней)
-        from storage import user_storage
+        from app.shared.storage import user_storage
 
         cleaned_count = user_storage.cleanup_old_data(30)
         logger.info(f"Очищено {cleaned_count} старых записей")
@@ -74,11 +79,11 @@ def main():
         bot_instance = Bot(token=config.BOT_TOKEN)
 
         async def main_async():
-            await on_startup(dp)
+            await on_startup()
             try:
                 await dp.start_polling(bot_instance, skip_updates=True)
             finally:
-                await on_shutdown(dp)
+                await on_shutdown()
 
         asyncio.run(main_async())
 
