@@ -137,9 +137,9 @@ def _build_overview_text(
         f"Часовой пояс: {tz_name}",
     ]
 
-    for ctx in window:
+    for idx, ctx in enumerate(window):
         suggestions = suggestions_map.get(ctx.date, [])
-        parts.append(_format_day_section(ctx, suggestions))
+        parts.append(_format_day_section(window, idx, suggestions))
 
     parts.append(MessagesData.LUNAR_PLANNER_ACTION_HINT)
 
@@ -156,11 +156,23 @@ def _build_overview_text(
     return "\n\n".join(parts)
 
 
-def _format_day_section(ctx: DayContext, suggestions: Sequence[ActionSuggestion]) -> str:
+def _format_day_section(
+    window: Sequence[DayContext],
+    index: int,
+    suggestions: Sequence[ActionSuggestion],
+) -> str:
+    ctx = window[index]
     date_label = _format_date_label(ctx.date)
+    span = _calculate_sign_span(window, index)
     lines = [
         f"{ctx.phase.emoji} {date_label} — {ctx.phase.title}",
-        f"{ctx.phase.energy.capitalize()}. Луна в {ctx.moon_sign.emoji} {ctx.moon_sign.title} — {ctx.moon_sign.focus}",
+        ctx.phase.description,
+        f"Энергия: {ctx.phase.energy.capitalize()}.",
+        f"Луна в {ctx.moon_sign.emoji} {ctx.moon_sign.title} {_format_sign_duration(span)}",
+        f"Фокус: {ctx.moon_sign.focus}",
+        f"Влияние: {ctx.moon_sign.vibe}",
+        f"Рекомендуется: {ctx.moon_sign.recommended}",
+        f"Предупреждение: {ctx.moon_sign.caution}",
     ]
 
     if suggestions:
@@ -261,6 +273,22 @@ def _collect_display_actions(
             break
 
     return result
+
+
+def _calculate_sign_span(window: Sequence[DayContext], index: int) -> int:
+    current = window[index].moon_sign.key
+    count = 1
+    for idx in range(index + 1, len(window)):
+        if window[idx].moon_sign.key != current:
+            break
+        count += 1
+    return count
+
+
+def _format_sign_duration(span: int) -> str:
+    if span <= 1:
+        return "только сегодня"
+    return f"в ближайшие {span} {_pluralize_days(span)}"
 
 
 def _is_premium(user_id: int) -> bool:
