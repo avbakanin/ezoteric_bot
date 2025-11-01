@@ -2,6 +2,9 @@ aiogram==3.2.0
 python-dotenv==1.0.0
 schedule==1.2.0
 aiofiles==23.2.1
+geopy==2.4.1
+flatlib==0.2.3
+tzdata==2025.2
 
 # Автоматизация рабочего процесса
 poethepoet==0.37.0 # Запуск скриптов с помощью команд

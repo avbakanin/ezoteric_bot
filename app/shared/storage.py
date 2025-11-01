@@ -74,6 +74,13 @@ class UserStorage:
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         return {
             "birth_date": None,
+            "birth_time": None,
+            "timezone": None,
+            "utc_offset": None,
+            "lat": None,
+            "lon": None,
+            "place_name": None,
+            "age": None,
             "life_path_number": None,
             "soul_number": None,
             "subscription": {"active": False, "expires": None, "type": "free"},
@@ -100,6 +107,7 @@ class UserStorage:
                 "number": None,
                 "text": None,
             },
+            "retro_alerts": {},
             "created_at": now,
             "last_activity": now,
         }
@@ -336,6 +344,26 @@ class UserStorage:
     def get_all_users(self) -> Dict[str, Any]:
         """Возвращает всех пользователей"""
         return self.data
+
+    def get_retro_alert_state(self, user_id: int) -> dict[str, Any]:
+        user = self._get_user(user_id)
+        return user.setdefault("retro_alerts", {})
+
+    def has_retro_alert(self, user_id: int, planet: str, alert_type: str, date_str: str) -> bool:
+        state = self.get_retro_alert_state(user_id)
+        planet_state = state.get(planet, {})
+        key = "last_pre_alert" if alert_type == "pre" else "last_start_alert"
+        return planet_state.get(key) == date_str
+
+    def mark_retro_alert(self, user_id: int, planet: str, alert_type: str, date_str: str) -> None:
+        user = self._get_user(user_id)
+        state = user.setdefault("retro_alerts", {})
+        planet_state = state.setdefault(planet, {})
+        key = "last_pre_alert" if alert_type == "pre" else "last_start_alert"
+        if planet_state.get(key) == date_str:
+            return
+        planet_state[key] = date_str
+        self._save_data()
 
     def get_diary_entries_in_range(self, user_id: int, start: datetime, end: datetime) -> list[dict[str, Any]]:
         user = self.get_user(user_id)

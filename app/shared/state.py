@@ -14,3 +14,15 @@ class UserStates(StatesGroup):
     waiting_for_diary_category = State()
     waiting_for_yes_no_question = State()
     waiting_for_name_number = State()
+
+
+class NatalProfileStates(StatesGroup):
+    """Состояния диалога сбора натальных данных."""
+
+    confirm_age = State()
+    waiting_for_age = State()
+    waiting_for_birth_date = State()
+    waiting_for_birth_time = State()
+    waiting_for_place = State()
+    confirm_place = State()
+    waiting_for_timezone = State()

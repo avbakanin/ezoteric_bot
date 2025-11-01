@@ -7,16 +7,62 @@ import datetime
 import logging
 from collections import Counter
 from datetime import timedelta
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Sequence, Tuple
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 
 from app.settings import config
+from app.shared.astro import (
+    ForecastResult,
+    daily_transit_service,
+    retrograde_service,
+    transit_interpreter,
+)
+from app.shared.birth_profiles import birth_profile_storage
 from app.shared.calculations import calculate_daily_number
-from app.shared.messages import DiaryMessages
+from app.shared.messages import DiaryMessages, MessagesData
 from app.shared.storage import user_storage
 from app.shared.texts import get_number_texts
+
+try:
+    from zoneinfo import ZoneInfo
+except ModuleNotFoundError:  # pragma: no cover
+    ZoneInfo = None  # type: ignore[assignment]
+
+
+class ForecastPreview:
+    def __init__(self, base: ForecastResult, aspects_limit: int = 1):
+        self.base = base
+        self.aspects_limit = aspects_limit
+
+    @classmethod
+    def build(cls, base: ForecastResult, aspects_limit: int = 1) -> "ForecastPreview":
+        return cls(base, aspects_limit)
+
+    def to_result(self) -> ForecastResult:
+        return ForecastResult(
+            user_id=self.base.user_id,
+            target_date=self.base.target_date,
+            natal_chart=self.base.natal_chart,
+            transit_chart=self.base.transit_chart,
+            aspects=self.base.aspects[: self.aspects_limit],
+            missing_fields=[],
+        )
+
+
+def _user_is_premium(user_id: int) -> bool:
+    user = user_storage.get_user(user_id)
+    subscription = user.get("subscription", {})
+    return bool(subscription.get("active"))
+
+
+def _get_user_timezone(user_id: int, user_data: dict[str, Any]) -> str:
+    profile = birth_profile_storage.get_profile(user_id)
+    if profile and profile.get("timezone"):
+        return profile["timezone"]
+    return user_data.get("timezone") or "UTC"
+
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +130,9 @@ class NotificationScheduler:
         if now.weekday() == 0 and self.last_digest_week != now.isocalendar()[:2]:
             await self._send_weekly_digests(now)
             self.last_digest_week = now.isocalendar()[:2]
+
+        await self._send_daily_transit_forecasts(now)
+        await self._send_retrograde_alerts(now)
 
     async def _send_daily_notifications(self, now: datetime.datetime):
         """
@@ -228,14 +277,166 @@ class NotificationScheduler:
                     else:
                         raise
 
-            except Exception as e:
+    async def _send_daily_transit_forecasts(self, now: datetime.datetime):  # noqa: C901
+        if ZoneInfo is None:
+            return
+
+        profiles = birth_profile_storage.get_all_profiles()
+        if not profiles:
+            return
+
+        for user_id_str, profile in profiles.items():
+            try:
+                user_id = int(user_id_str)
+            except ValueError:
+                continue
+
+            timezone_name = profile.get("timezone")
+            if not timezone_name:
+                continue
+
+            try:
+                tz = ZoneInfo(timezone_name)
+            except Exception:
+                logger.debug("Неверный часовой пояс %s для пользователя %s", timezone_name, user_id)
+                continue
+
+            local_now = now.astimezone(tz)
+            if not (local_now.hour == 11 and local_now.minute == 0):
+                continue
+
+            local_date = local_now.date()
+            if profile.get("last_forecast_sent") == local_date.isoformat():
+                continue
+
+            try:
+                forecast = daily_transit_service.generate(
+                    profile,
+                    user_id=user_id,
+                    target_date=local_date,
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("Ошибка расчёта прогноза для %s: %s", user_id, exc)
+                continue
+
+            if forecast.missing_fields:
+                continue
+
+            is_premium = _user_is_premium(user_id)
+            if is_premium:
+                message_text = transit_interpreter.render_forecast(forecast)
+            else:
+                preview = ForecastPreview.build(forecast)
+                message_text = "\n\n".join(
+                    [
+                        transit_interpreter.render_forecast(preview.to_result()),
+                        MessagesData.ASTRO_FORECAST_PREMIUM_PREVIEW,
+                        MessagesData.ASTRO_FORECAST_PREMIUM_ONLY,
+                    ]
+                )
+
+            try:
+                await self.bot.send_message(user_id, message_text)
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("Не удалось отправить астропрогноз %s: %s", user_id, exc)
+                continue
+
+            birth_profile_storage.mark_forecast_sent(user_id, local_date.isoformat())
+            birth_profile_storage.save_forecast_text(
+                user_id,
+                local_date.isoformat(),
+                message_text,
+                is_preview=not is_premium,
+            )
+
+    async def _send_retrograde_alerts(self, now: datetime.datetime):  # noqa: C901
+        start_date = now.date()
+        end_date = start_date + timedelta(days=120)
+        periods_map = retrograde_service.get_periods(start_date, end_date)
+        if not any(periods_map.values()):
+            return
+
+        users = user_storage.get_all_users().items()
+        if not users:
+            return
+
+        for user_id_str, user_data in users:
+            try:
+                user_id = int(user_id_str)
+            except ValueError:
+                continue
+
+            notifications = user_data.get("notifications", {})
+            if not notifications.get("enabled", True):
+                continue
+
+            tz_name = _get_user_timezone(user_id, user_data)
+            local_now = self._to_local(now, tz_name)
+            if not (local_now.hour == self.target_hour and local_now.minute == self.target_minute):
+                continue
+
+            local_date = local_now.date()
+            is_premium = _user_is_premium(user_id)
+            allowed_planets: Sequence[str] = retrograde_service.tracked_planets if is_premium else ("Mercury",)
+
+            for planet in allowed_planets:
+                for period in periods_map.get(planet, []):
+                    pre_iso = period.pre_alert.isoformat()
+                    start_iso = period.start.isoformat()
+
+                    if period.pre_alert == local_date and not user_storage.has_retro_alert(user_id, planet, "pre", pre_iso):
+                        message = retrograde_service.format_pre_alert(period, is_premium, local_date)
+                        await self._send_retro_message(user_id, message)
+                        user_storage.mark_retro_alert(user_id, planet, "pre", pre_iso)
+
+                    if period.start == local_date and not user_storage.has_retro_alert(user_id, planet, "start", start_iso):
+                        message = retrograde_service.format_start_alert(period, is_premium)
+                        await self._send_retro_message(user_id, message)
+                        user_storage.mark_retro_alert(user_id, planet, "start", start_iso)
+
+    async def _send_retro_message(self, user_id: int, message_text: str) -> None:
+        for attempt in range(self.max_retries):
+            try:
+                await self.bot.send_message(user_id, message_text)
+                return
+            except TelegramAPIError as e:
+                if e.error_code == 403:
+                    logger.warning("Пользователь %s заблокировал бота (ретро-оповещение)", user_id)
+                    user_storage.update_user(user_id, notifications={"enabled": False})
+                    return
+                if e.error_code == 400:
+                    logger.error("Неверный запрос при отправке ретро-оповещения %s: %s", user_id, e)
+                    return
                 logger.warning(
-                    f"Попытка {attempt + 1} отправки уведомления пользователю {user_id} неудачна: {e}"
+                    "Попытка %s отправить ретро-оповещение пользователю %s неудачна: %s",
+                    attempt + 1,
+                    user_id,
+                    e,
                 )
                 if attempt < self.max_retries - 1:
                     await asyncio.sleep(self.retry_delay)
                 else:
                     raise
+            except Exception as e:
+                logger.warning(
+                    "Попытка %s отправить ретро-оповещение пользователю %s неудачна: %s",
+                    attempt + 1,
+                    user_id,
+                    e,
+                )
+                if attempt < self.max_retries - 1:
+                    await asyncio.sleep(self.retry_delay)
+                else:
+                    raise
+
+    @staticmethod
+    def _to_local(now: datetime.datetime, tz_name: str) -> datetime.datetime:
+        if ZoneInfo is None:
+            return now
+        try:
+            return now.astimezone(ZoneInfo(tz_name))
+        except Exception:
+            return now
 
     def _get_daily_text(self, daily_number: int, text_history: List[str]) -> str:
         """

@@ -4,6 +4,8 @@ from aiogram import Dispatcher
 
 from .admin.router import router as admin_router
 from .affirmation.router import router as affirmation_router
+from .astro_forecast.router import router as astro_forecast_router
+from .astro_profile.router import router as astro_profile_router
 from .base.router import router as base_router
 from .compatibility.router import router as compatibility_router
 from .daily_number.router import router as daily_number_router
@@ -14,6 +16,7 @@ from .name_number.router import router as name_number_router
 from .navigation.router import router as navigation_router
 from .premium.router import router as premium_router
 from .profile.router import router as profile_router
+from .retro_alerts.router import router as retro_alerts_router
 from .yes_no.router import router as yes_no_router
 
 
@@ -22,6 +25,9 @@ def setup_routers(dp: Dispatcher) -> None:
         admin_router,
         navigation_router,
         profile_router,
+        astro_profile_router,
+        astro_forecast_router,
+        retro_alerts_router,
         diary_router,
         feedback_router,
         compatibility_router,

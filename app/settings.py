@@ -49,6 +49,8 @@ class BotConfig:
         self.MAX_MESSAGE_LENGTH = int(os.getenv("MAX_MESSAGE_LENGTH", "4096"))
         self.MAX_RETRIES = int(os.getenv("MAX_RETRIES", "3"))
         self.RETRY_DELAY = int(os.getenv("RETRY_DELAY", "5"))
+        self.GEOCODER_USER_AGENT = os.getenv("GEOCODER_USER_AGENT", "ezoteric-bot/1.0")
+        self.GEOCODER_TIMEOUT = float(os.getenv("GEOCODER_TIMEOUT", "5.0"))
 
         # Настройки безопасности
         self.RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "10"))
@@ -89,6 +91,8 @@ class BotConfig:
             "MAX_MESSAGE_LENGTH": self.MAX_MESSAGE_LENGTH,
             "MAX_RETRIES": self.MAX_RETRIES,
             "RETRY_DELAY": self.RETRY_DELAY,
+            "GEOCODER_USER_AGENT": self.GEOCODER_USER_AGENT,
+            "GEOCODER_TIMEOUT": self.GEOCODER_TIMEOUT,
             "ADMIN_USER_IDS": sorted(self.ADMIN_USER_IDS),
             "RATE_LIMIT_PER_MINUTE": self.RATE_LIMIT_PER_MINUTE,
             "MAX_INPUT_LENGTH": self.MAX_INPUT_LENGTH,
@@ -112,4 +116,6 @@ SUBSCRIPTION_DURATION = config.SUBSCRIPTION_DURATION
 MAX_MESSAGE_LENGTH = config.MAX_MESSAGE_LENGTH
 MAX_RETRIES = config.MAX_RETRIES
 RETRY_DELAY = config.RETRY_DELAY
+GEOCODER_USER_AGENT = config.GEOCODER_USER_AGENT
+GEOCODER_TIMEOUT = config.GEOCODER_TIMEOUT
 ADMIN_USER_IDS = config.ADMIN_USER_IDS
