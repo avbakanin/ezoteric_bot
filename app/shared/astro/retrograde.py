@@ -137,7 +137,13 @@ class RetrogradeService:
             days=days,
             days_word=days_word,
         )
-        return "\n\n".join([message, MessagesData.RETRO_ALERTS_PREMIUM_ONLY])
+        return "\n\n".join(
+            [
+                message,
+                MessagesData.RETRO_ALERTS_PREMIUM_ONLY,
+                MessagesData.RETRO_ALERTS_PREMIUM_CTA,
+            ]
+        )
 
     def format_start_alert(self, period: RetroPeriod, is_premium: bool) -> str:
         planet_name = PLANET_NAMES_RU.get(period.planet, period.planet)
@@ -161,7 +167,13 @@ class RetrogradeService:
             start_date=start_str,
             end_date=end_str,
         )
-        return "\n\n".join([message, MessagesData.RETRO_ALERTS_PREMIUM_ONLY])
+        return "\n\n".join(
+            [
+                message,
+                MessagesData.RETRO_ALERTS_PREMIUM_ONLY,
+                MessagesData.RETRO_ALERTS_PREMIUM_CTA,
+            ]
+        )
 
     def format_summary(self, period: RetroPeriod, is_premium: bool, today: date) -> str:
         planet_name = PLANET_NAMES_RU.get(period.planet, period.planet)

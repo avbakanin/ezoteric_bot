@@ -12,7 +12,7 @@ from aiogram.types import Message
 from app.shared.astro import ForecastResult, daily_transit_service, transit_interpreter
 from app.shared.birth_profiles import birth_profile_storage
 from app.shared.decorators import catch_errors
-from app.shared.keyboards import get_back_to_main_keyboard
+from app.shared.keyboards import get_back_to_main_keyboard, get_premium_info_keyboard
 from app.shared.messages import CommandsData, MessagesData, TextCommandsData
 from app.shared.storage import user_storage
 
@@ -102,9 +102,9 @@ async def handle_astro_forecast(message: Message, state: FSMContext):
     preview_message = "\n\n".join([preview_text, MessagesData.ASTRO_FORECAST_PREMIUM_PREVIEW])
     await message.answer(
         preview_message,
-        reply_markup=get_back_to_main_keyboard(),
+        reply_markup=get_premium_info_keyboard(),
     )
-    await message.answer(MessagesData.ASTRO_FORECAST_PREMIUM_ONLY, reply_markup=get_back_to_main_keyboard())
+    await message.answer(MessagesData.ASTRO_FORECAST_PREMIUM_ONLY, reply_markup=get_premium_info_keyboard())
     birth_profile_storage.save_forecast_text(
         user_id,
         forecast.target_date.isoformat(),

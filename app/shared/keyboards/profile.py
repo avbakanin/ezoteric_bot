@@ -10,6 +10,7 @@ from ..messages import CallbackData
 def get_profile_keyboard(
     has_calculated: bool = False,
     notifications_enabled: bool = False,
+    subscription_active: bool = False,
 ) -> InlineKeyboardMarkup:
     """
     Создает клавиатуру для профиля пользователя
@@ -18,8 +19,7 @@ def get_profile_keyboard(
         "🔕 Выключить уведомления" if notifications_enabled else "🔔 Включить уведомления"
     )
 
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
+    rows = [
             [
                 InlineKeyboardButton(
                     text="🧮 Рассчитать число", callback_data=CallbackData.LIFE_PATH_NUMBER
@@ -30,7 +30,20 @@ def get_profile_keyboard(
                     text=toggle_text, callback_data=CallbackData.NOTIFICATIONS_TOGGLE
                 )
             ],
-            [InlineKeyboardButton(text="↩️ В главное меню", callback_data=CallbackData.BACK_MAIN)],
-        ]
+    ]
+
+    if not subscription_active:
+        rows.append(
+            [
+                InlineKeyboardButton(
+                    text="💎 Узнать про Premium",
+                    callback_data=CallbackData.PREMIUM_INFO,
+                )
+            ]
+        )
+
+    rows.append(
+        [InlineKeyboardButton(text="↩️ В главное меню", callback_data=CallbackData.BACK_MAIN)]
     )
-    return keyboard
+
+    return InlineKeyboardMarkup(inline_keyboard=rows)

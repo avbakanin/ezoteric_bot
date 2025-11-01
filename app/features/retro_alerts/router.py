@@ -12,7 +12,7 @@ from aiogram.types import Message
 from app.shared.astro import retrograde_service
 from app.shared.birth_profiles import birth_profile_storage
 from app.shared.decorators import catch_errors
-from app.shared.keyboards import get_back_to_main_keyboard
+from app.shared.keyboards import get_back_to_main_keyboard, get_premium_info_keyboard
 from app.shared.messages import CommandsData, MessagesData, TextCommandsData
 from app.shared.storage import user_storage
 
@@ -68,10 +68,20 @@ async def retro_alerts_command(message: Message, state: FSMContext):
         )
         return
 
-    if not is_premium and any(planet != "Mercury" for planet in retrograde_service.tracked_planets):
-        blocks.append(MessagesData.RETRO_ALERTS_PREMIUM_PROMO)
+    reply_markup = get_back_to_main_keyboard()
 
-    await message.answer("\n\n".join(blocks), reply_markup=get_back_to_main_keyboard())
+    if not is_premium and any(planet != "Mercury" for planet in retrograde_service.tracked_planets):
+        blocks.extend(
+            [
+                MessagesData.RETRO_ALERTS_PREMIUM_PROMO,
+                MessagesData.RETRO_ALERTS_PREMIUM_CTA,
+            ]
+        )
+        reply_markup = get_premium_info_keyboard()
+    elif is_premium:
+        blocks.append(MessagesData.RETRO_ALERTS_PREMIUM_THANKS)
+
+    await message.answer("\n\n".join(blocks), reply_markup=reply_markup)
 
 
 def _get_today_local(tz_name: str) -> date:

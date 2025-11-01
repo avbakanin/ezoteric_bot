@@ -12,7 +12,7 @@ from aiogram.types import Message
 from app.shared.astro import aspect_of_day_service
 from app.shared.birth_profiles import birth_profile_storage
 from app.shared.decorators import catch_errors
-from app.shared.keyboards import get_back_to_main_keyboard
+from app.shared.keyboards import get_back_to_main_keyboard, get_premium_info_keyboard
 from app.shared.messages import CommandsData, MessagesData, TextCommandsData
 from app.shared.storage import user_storage
 
@@ -62,7 +62,12 @@ async def aspect_of_day_command(message: Message, state: FSMContext):
     aspects = aspect_of_day_service.get_top(today, count=2 if is_premium else 1)
     text = aspect_of_day_service.format_message(aspects, is_premium)
 
-    if not is_premium:
-        text = "\n\n".join([text, MessagesData.ASPECT_OF_DAY_PREMIUM_PROMO])
+    reply_markup = get_back_to_main_keyboard()
 
-    await message.answer(text, reply_markup=get_back_to_main_keyboard())
+    if not is_premium:
+        text = "\n\n".join([text, MessagesData.ASPECT_OF_DAY_PREMIUM_PROMO, MessagesData.ASPECT_OF_DAY_PREMIUM_CTA])
+        reply_markup = get_premium_info_keyboard()
+    else:
+        text = "\n\n".join([text, MessagesData.ASPECT_OF_DAY_PREMIUM_THANKS])
+
+    await message.answer(text, reply_markup=reply_markup)

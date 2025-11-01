@@ -15,19 +15,34 @@ def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
         resize_keyboard=True,
         one_time_keyboard=False,
         keyboard=[
-            [KeyboardButton(text=TextCommandsData.LIFE_PATH_NUMBER)],
-            [KeyboardButton(text=TextCommandsData.NAME_NUMBER)],
-            [KeyboardButton(text=TextCommandsData.YES_NO)],
-            [KeyboardButton(text=TextCommandsData.DAILY_NUMBER)],
-            [KeyboardButton(text=TextCommandsData.ASPECT_OF_DAY)],
-            [KeyboardButton(text=TextCommandsData.ASTRO_FORECAST)],
-            [KeyboardButton(text=TextCommandsData.ASTRO_FORECAST_HISTORY)],
-            [KeyboardButton(text=TextCommandsData.RETRO_ALERTS)],
-            [KeyboardButton(text=TextCommandsData.COMPATIBILITY)],
-            [KeyboardButton(text=TextCommandsData.PROFILE)],
-            [KeyboardButton(text=TextCommandsData.ABOUT)],
-            [KeyboardButton(text=TextCommandsData.DIARY_OBSERVATION)],
-            [KeyboardButton(text=TextCommandsData.FEEDBACK)],
+            [
+                KeyboardButton(text=TextCommandsData.LIFE_PATH_NUMBER),
+                KeyboardButton(text=TextCommandsData.NAME_NUMBER),
+            ],
+            [
+                KeyboardButton(text=TextCommandsData.COMPATIBILITY),
+                KeyboardButton(text=TextCommandsData.YES_NO),
+            ],
+            [
+                KeyboardButton(text=TextCommandsData.ASTRO_FORECAST),
+                KeyboardButton(text=TextCommandsData.ASPECT_OF_DAY),
+            ],
+            [
+                KeyboardButton(text=TextCommandsData.RETRO_ALERTS),
+                KeyboardButton(text=TextCommandsData.ASTRO_FORECAST_HISTORY),
+            ],
+            [
+                KeyboardButton(text=TextCommandsData.DAILY_NUMBER),
+                KeyboardButton(text=TextCommandsData.DIARY_OBSERVATION),
+            ],
+            [
+                KeyboardButton(text=TextCommandsData.PROFILE),
+                KeyboardButton(text=TextCommandsData.ABOUT),
+            ],
+            [
+                KeyboardButton(text=TextCommandsData.FEEDBACK),
+                KeyboardButton(text=TextCommandsData.PREMIUM),
+            ],
         ],
     )
     return keyboard

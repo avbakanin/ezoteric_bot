@@ -1,5 +1,7 @@
 """Профиль пользователя."""
 
+from datetime import datetime
+
 from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -23,7 +25,21 @@ router = Router()
 def _build_profile_view(user_id: int) -> tuple[str, InlineKeyboardMarkup]:
     user_data = user_storage.get_user(user_id)
     usage_stats = user_storage.get_usage_stats(user_id)
-    subscription_status = "Premium" if user_data["subscription"]["active"] else "Бесплатный"
+    subscription = user_data.get("subscription", {})
+    subscription_active = bool(subscription.get("active"))
+    subscription_status = "Premium" if subscription_active else "Бесплатный"
+    expires_raw = subscription.get("expires")
+    expires_display = None
+    if subscription_active and expires_raw:
+        try:
+            expires_display = datetime.fromisoformat(expires_raw).strftime("%d.%m.%Y")
+        except ValueError:
+            expires_display = expires_raw
+    premium_cta = (
+        MessagesData.PROFILE_PREMIUM_ACTIVE
+        if subscription_active
+        else MessagesData.PROFILE_PREMIUM_CTA
+    )
     cached_result = user_storage.get_cached_result(user_id)
     notifications = user_data.get("notifications", {})
     notifications_enabled = notifications.get("enabled", False)
@@ -38,8 +54,14 @@ def _build_profile_view(user_id: int) -> tuple[str, InlineKeyboardMarkup]:
         has_cached=bool(cached_result),
         notifications_enabled=notifications_enabled,
         notification_time=notification_time,
+        subscription_expires=expires_display,
+        premium_cta=premium_cta,
     )
-    keyboard = get_profile_keyboard(has_calculated, notifications_enabled)
+    keyboard = get_profile_keyboard(
+        has_calculated,
+        notifications_enabled,
+        subscription_active,
+    )
     return profile_text, keyboard
 
 
