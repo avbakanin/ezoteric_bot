@@ -16,6 +16,9 @@ from .diary import get_diary_category_keyboard, get_diary_history_keyboard, get_
 # Обратная связь
 from .feedback import get_feedback_keyboard
 
+# Лунный планировщик
+from .lunar_planner import get_lunar_actions_keyboard
+
 # Главное меню
 from .main import get_main_menu_keyboard
 
@@ -54,4 +57,6 @@ __all__ = [
     "get_yes_no_keyboard",
     # Аффирмации
     "get_affirmation_keyboard",
+    # Лунный планировщик
+    "get_lunar_actions_keyboard",
 ]

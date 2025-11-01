@@ -316,7 +316,7 @@ class NotificationScheduler:
                     target_date=local_date,
                 )
             except Exception as exc:  # noqa: BLE001
-                logger.debug("Ошибка расчёта прогноза для %s: %s", user_id, exc)
+                logger.debug("Ошибка расчёта натальной карты для %s: %s", user_id, exc)
                 continue
 
             if forecast.missing_fields:
@@ -330,15 +330,15 @@ class NotificationScheduler:
                 message_text = "\n\n".join(
                     [
                         transit_interpreter.render_forecast(preview.to_result()),
-                        MessagesData.ASTRO_FORECAST_PREMIUM_PREVIEW,
-                        MessagesData.ASTRO_FORECAST_PREMIUM_ONLY,
+                        MessagesData.NATAL_CHART_PREMIUM_PREVIEW,
+                        MessagesData.NATAL_CHART_PREMIUM_ONLY,
                     ]
                 )
 
             try:
                 await self.bot.send_message(user_id, message_text)
             except Exception as exc:  # noqa: BLE001
-                logger.debug("Не удалось отправить астропрогноз %s: %s", user_id, exc)
+                logger.debug("Не удалось отправить натальную карту %s: %s", user_id, exc)
                 continue
 
             birth_profile_storage.mark_forecast_sent(user_id, local_date.isoformat())

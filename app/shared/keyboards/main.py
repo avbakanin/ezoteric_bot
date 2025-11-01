@@ -24,23 +24,26 @@ def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
                 KeyboardButton(text=TextCommandsData.YES_NO),
             ],
             [
-                KeyboardButton(text=TextCommandsData.ASTRO_FORECAST),
+                KeyboardButton(text=TextCommandsData.NATAL_CHART),
                 KeyboardButton(text=TextCommandsData.ASPECT_OF_DAY),
             ],
             [
                 KeyboardButton(text=TextCommandsData.RETRO_ALERTS),
-                KeyboardButton(text=TextCommandsData.ASTRO_FORECAST_HISTORY),
+                KeyboardButton(text=TextCommandsData.LUNAR_PLANNER),
             ],
             [
+                KeyboardButton(text=TextCommandsData.NATAL_CHART_HISTORY),
                 KeyboardButton(text=TextCommandsData.DAILY_NUMBER),
+            ],
+            [
                 KeyboardButton(text=TextCommandsData.DIARY_OBSERVATION),
-            ],
-            [
                 KeyboardButton(text=TextCommandsData.PROFILE),
-                KeyboardButton(text=TextCommandsData.ABOUT),
             ],
             [
+                KeyboardButton(text=TextCommandsData.ABOUT),
                 KeyboardButton(text=TextCommandsData.FEEDBACK),
+            ],
+            [
                 KeyboardButton(text=TextCommandsData.PREMIUM),
             ],
         ],

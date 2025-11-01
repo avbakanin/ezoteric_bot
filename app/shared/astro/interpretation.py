@@ -73,7 +73,7 @@ class TransitInterpreter:
         if not forecast.ok:
             missing = ", ".join(forecast.missing_fields)
             return (
-                "⚠️ Не хватает данных для прогноза.\n"
+                "⚠️ Не хватает данных для натальной карты.\n"
                 f"Заполните: {missing}."
             )
 
@@ -87,7 +87,7 @@ class TransitInterpreter:
             return "Сегодня значимые транзиты не зафиксированы. Сохраняйте спокойный ритм."
 
         paragraphs = [item.to_text() for item in rendered]
-        heading = f"✨ Персональный астропрогноз на {forecast.target_date.strftime('%d.%m.%Y')}"
+        heading = f"✨ Натальная карта дня на {forecast.target_date.strftime('%d.%m.%Y')}"
         return "\n\n".join([heading, *paragraphs])
 
     def _render_aspect(self, aspect: TransitAspect, forecast: ForecastResult) -> RenderedAspect | None:

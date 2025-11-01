@@ -1,4 +1,4 @@
-"""Персональный астропрогноз (натальный календарь)."""
+"""Натальная карта дня и транзитный разбор."""
 
 from __future__ import annotations
 
@@ -59,12 +59,12 @@ def _build_preview(result: ForecastResult) -> ForecastResult:
     )
 
 
-@router.message(Command(CommandsData.ASTRO_FORECAST), StateFilter("*"))
-@router.message(F.text == TextCommandsData.ASTRO_FORECAST, StateFilter("*"))
+@router.message(Command(CommandsData.NATAL_CHART), StateFilter("*"))
+@router.message(F.text == TextCommandsData.NATAL_CHART, StateFilter("*"))
 @catch_errors()
-async def handle_astro_forecast(message: Message, state: FSMContext):
+async def handle_natal_chart(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer(MessagesData.ASTRO_FORECAST_PROMPT)
+    await message.answer(MessagesData.NATAL_CHART_PROMPT)
 
     user_id = message.from_user.id
     forecast = daily_transit_service.generate_for_user(user_id)
@@ -72,14 +72,14 @@ async def handle_astro_forecast(message: Message, state: FSMContext):
     if forecast.missing_fields:
         if forecast.missing_fields == ["profile"]:
             await message.answer(
-                MessagesData.ASTRO_FORECAST_MISSING_PROFILE,
+                MessagesData.NATAL_CHART_MISSING_PROFILE,
                 reply_markup=get_back_to_main_keyboard(),
             )
             return
 
         fields = _format_missing_fields(forecast)
         await message.answer(
-            MessagesData.ASTRO_FORECAST_MISSING_FIELDS.format(fields=fields),
+            MessagesData.NATAL_CHART_MISSING_FIELDS.format(fields=fields),
             reply_markup=get_back_to_main_keyboard(),
         )
         return
@@ -99,12 +99,12 @@ async def handle_astro_forecast(message: Message, state: FSMContext):
 
     preview_forecast = _build_preview(forecast)
     preview_text = transit_interpreter.render_forecast(preview_forecast)
-    preview_message = "\n\n".join([preview_text, MessagesData.ASTRO_FORECAST_PREMIUM_PREVIEW])
+    preview_message = "\n\n".join([preview_text, MessagesData.NATAL_CHART_PREMIUM_PREVIEW])
     await message.answer(
         preview_message,
         reply_markup=get_premium_info_keyboard(),
     )
-    await message.answer(MessagesData.ASTRO_FORECAST_PREMIUM_ONLY, reply_markup=get_premium_info_keyboard())
+    await message.answer(MessagesData.NATAL_CHART_PREMIUM_ONLY, reply_markup=get_premium_info_keyboard())
     birth_profile_storage.save_forecast_text(
         user_id,
         forecast.target_date.isoformat(),
@@ -113,16 +113,16 @@ async def handle_astro_forecast(message: Message, state: FSMContext):
     )
 
 
-@router.message(Command(CommandsData.ASTRO_FORECAST_HISTORY), StateFilter("*"))
-@router.message(F.text == TextCommandsData.ASTRO_FORECAST_HISTORY, StateFilter("*"))
+@router.message(Command(CommandsData.NATAL_CHART_HISTORY), StateFilter("*"))
+@router.message(F.text == TextCommandsData.NATAL_CHART_HISTORY, StateFilter("*"))
 @catch_errors()
-async def handle_astro_forecast_history(message: Message, state: FSMContext):
+async def handle_natal_chart_history(message: Message, state: FSMContext):
     await state.clear()
     user_id = message.from_user.id
     record = birth_profile_storage.get_last_forecast(user_id)
     if not record:
         await message.answer(
-            MessagesData.ASTRO_FORECAST_HISTORY_EMPTY,
+            MessagesData.NATAL_CHART_HISTORY_EMPTY,
             reply_markup=get_back_to_main_keyboard(),
         )
         return
@@ -130,12 +130,12 @@ async def handle_astro_forecast_history(message: Message, state: FSMContext):
     date_str = record.get("date")
     display_date = _format_iso_to_display(date_str) if date_str else "—"
     lines = [
-        MessagesData.ASTRO_FORECAST_HISTORY_TITLE.format(date=display_date),
+        MessagesData.NATAL_CHART_HISTORY_TITLE.format(date=display_date),
         record.get("text", ""),
     ]
 
     if record.get("is_preview"):
-        lines.append(MessagesData.ASTRO_FORECAST_HISTORY_PREVIEW_NOTE)
+        lines.append(MessagesData.NATAL_CHART_HISTORY_PREVIEW_NOTE)
 
     await message.answer("\n\n".join(lines), reply_markup=get_back_to_main_keyboard())
 
