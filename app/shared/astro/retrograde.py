@@ -10,64 +10,9 @@ from typing import Dict, List, Sequence
 from app.shared.messages import MessagesData
 
 from .ephemeris import EphemerisService, ephemeris_service
+from .retrograde_data import DEFAULT_BEFORE_GUIDE, DEFAULT_DURING_GUIDE, GUIDES, PLANET_NAMES_RU
 
 logger = logging.getLogger(__name__)
-
-
-PLANET_NAMES_RU = {
-    "Mercury": "Меркурий",
-    "Venus": "Венера",
-    "Mars": "Марс",
-}
-
-GUIDES = {
-    "Mercury": {
-        "pre": [
-            "Закончите важные переговоры и подпишите документы заранее",
-            "Сделайте резервные копии файлов и перепроверите технику",
-            "Спланируйте дополнительное время на дороги и ответы",
-        ],
-        "during": [
-            "Перепроверяйте факты, письма и договорённости",
-            "Сохраняйте спокойствие при задержках и сбоях",
-            "Возвращайтесь к черновикам и старым идеям — их можно доработать",
-        ],
-    },
-    "Venus": {
-        "pre": [
-            "Закройте незавершённые финансовые вопросы",
-            "Обсудите ожидания в отношениях до начала ретро",
-            "Сделайте ревизию гардероба и косметички",
-        ],
-        "during": [
-            "Пересматривайте ценности, не спешите с крупными покупками",
-            "Берегите отношения — мягко обсуждайте старые темы",
-            "Возвращайтесь к творческим проектам и дорабатывайте их",
-        ],
-    },
-    "Mars": {
-        "pre": [
-            "Планируйте дела, требующие активной энергии, заранее",
-            "Проверьте состояние техники и транспорта",
-            "Расставьте приоритеты, чтобы не распыляться",
-        ],
-        "during": [
-            "Следите за уровнем энергии, не перегружайте себя",
-            "Завершайте старые дела вместо старта новых",
-            "Работайте над стратегией, готовьтесь к перезапуску после ретро",
-        ],
-    },
-}
-
-DEFAULT_BEFORE_GUIDE = [
-    "Завершите важные дела заранее",
-    "Оставьте запас времени на корректировки",
-]
-
-DEFAULT_DURING_GUIDE = [
-    "Поддерживайте гибкость планов",
-    "Используйте время для анализа и доработки старых задач",
-]
 
 
 @dataclass(slots=True)
@@ -86,8 +31,29 @@ class RetroPeriod:
 class RetrogradeService:
     def __init__(self, ephemeris: EphemerisService = ephemeris_service):
         self.ephemeris = ephemeris
-        self.tracked_planets: Sequence[str] = ("Mercury", "Venus", "Mars")
+        # Базовые планеты для всех пользователей
+        self.base_planets: Sequence[str] = ("Mercury",)
+        # Полный список планет для Premium
+        self.tracked_planets: Sequence[str] = ("Mercury", "Venus", "Mars", "Jupiter", "Saturn")
         self.pre_alert_days = 3
+        
+        # Маппинг планет на объяснения для Premium
+        self._premium_explanations: dict[str, str] = {
+            "Mercury": MessagesData.RETRO_MERCURY_EXPLANATION,
+            "Venus": MessagesData.RETRO_VENUS_EXPLANATION,
+            "Mars": MessagesData.RETRO_MARS_EXPLANATION,
+            "Jupiter": MessagesData.RETRO_JUPITER_EXPLANATION,
+            "Saturn": MessagesData.RETRO_SATURN_EXPLANATION,
+        }
+        
+        # Маппинг планет на краткие объяснения для Free
+        self._free_explanations: dict[str, str] = {
+            "Mercury": MessagesData.RETRO_FREE_MERCURY,
+            "Venus": MessagesData.RETRO_FREE_VENUS,
+            "Mars": MessagesData.RETRO_FREE_MARS,
+            "Jupiter": MessagesData.RETRO_FREE_JUPITER,
+            "Saturn": MessagesData.RETRO_FREE_SATURN,
+        }
 
     def get_periods(self, start_date: date, end_date: date) -> Dict[str, List[RetroPeriod]]:
         analysis_start = start_date - timedelta(days=30)
@@ -180,18 +146,40 @@ class RetrogradeService:
         start_str = period.start.strftime("%d.%m.%Y")
         end_str = period.end.strftime("%d.%m.%Y") if period.end else MessagesData.RETRO_START_NO_END
         pre_str = period.pre_alert.strftime("%d.%m.%Y")
+        
         if period.contains(today):
-            return MessagesData.RETRO_ALERTS_SUMMARY_ACTIVE.format(
+            base_message = MessagesData.RETRO_ALERTS_SUMMARY_ACTIVE.format(
                 planet=planet_name,
                 start_date=start_str,
                 end_date=end_str,
             )
-        return MessagesData.RETRO_ALERTS_SUMMARY_UPCOMING.format(
+        else:
+            base_message = MessagesData.RETRO_ALERTS_SUMMARY_UPCOMING.format(
             planet=planet_name,
             start_date=start_str,
             end_date=end_str,
             pre_alert=pre_str,
         )
+        
+        # Добавляем объяснение ретроградности
+        explanation = self._get_retrograde_explanation(period.planet, is_premium)
+        return base_message + explanation
+    
+    def _get_retrograde_explanation(self, planet: str, is_premium: bool) -> str:
+        """Возвращает объяснение ретроградности для планеты."""
+        if is_premium:
+            # Для Premium - подробное объяснение для каждой планеты
+            return self._premium_explanations.get(planet, MessagesData.RETRO_WHAT_IS_RETROGRADE)
+        else:
+            # Для Free - базовое объяснение + краткое по планетам
+            explanation = MessagesData.RETRO_WHAT_IS_RETROGRADE
+            planet_explanation = self._free_explanations.get(planet)
+            if planet_explanation:
+                explanation += planet_explanation
+            else:
+                # Для других планет (если добавят в будущем)
+                explanation += "\n\n💎 Оформите Premium для подробных рекомендаций!"
+            return explanation
 
     def _compute_statuses(self, start_date: date, end_date: date) -> Dict[date, Dict[str, bool]]:
         statuses: Dict[date, Dict[str, bool]] = {}

@@ -9,51 +9,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from app.shared.calculations_data import MASTER_NUMBERS, NAME_NUMBER_FALLBACKS, NAME_NUMBER_MAP
+
 # Путь к файлу с аффирмациями
 NUMBERS_FILE = Path(__file__).resolve().parent.parent.parent / "numbers.json"
 
 with open(NUMBERS_FILE, "r", encoding="utf-8") as f:
     NUMBERS_DATA = json.load(f)
-
-MASTER_NUMBERS = [11, 22, 33]  # Мастер-числа, которые не редуцируем
-
-
-def _build_name_number_map() -> dict[str, int]:
-    mapping = {
-        1: ["A", "J", "S", "А", "И", "С", "Ъ", "Ь"],
-        2: ["B", "K", "T", "Б", "Й", "Т", "Ы"],
-        3: ["C", "L", "U", "В", "К", "У", "Э"],
-        4: ["D", "M", "V", "Г", "Л", "Ф", "Ю"],
-        5: ["E", "N", "W", "Д", "М", "Х", "Я"],
-        6: ["F", "O", "X", "Е", "Ё", "Н", "Ц"],
-        7: ["G", "P", "Y", "Ж", "О", "Ч", "Щ"],
-        8: ["H", "Q", "Z", "З", "П", "Ш"],
-        9: ["I", "R", "Р"],
-    }
-    result: dict[str, int] = {}
-    for value, letters in mapping.items():
-        for letter in letters:
-            result[letter.upper()] = value
-            result[letter.lower()] = value
-    return result
-
-
-NAME_NUMBER_MAP = _build_name_number_map()
-
-NAME_NUMBER_FALLBACKS = {
-    1: "Лидерство, независимость и стремление быть первым.",
-    2: "Сотрудничество, дипломатия и умение слышать других.",
-    3: "Творческое самовыражение, вдохновение и оптимизм.",
-    4: "Практичность, системность и стабильность во всем.",
-    5: "Любознательность, перемены и свобода действий.",
-    6: "Ответственность, забота и стремление к гармонии.",
-    7: "Аналитический ум, интуиция и поиск глубинного смысла.",
-    8: "Амбиции, управление ресурсами и материальный успех.",
-    9: "Гуманизм, эмпатия и желание помогать миру.",
-    11: "Интуитивная сила, духовность и вдохновение для других.",
-    22: "Созидательная энергия мастера, достигающего великих целей.",
-    33: "Бескорыстное служение и духовное наставничество.",
-}
 
 
 def reduce_number(number: int) -> int:

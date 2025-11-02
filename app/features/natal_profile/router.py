@@ -37,16 +37,7 @@ logger = logging.getLogger(__name__)
 
 router = Router()
 
-EXIT_WORDS = {"выход", "cancel", "отмена", "exit"}
-
-POPULAR_TIMEZONES = [
-    ("Europe/Moscow", "🇷🇺 Москва"),
-    ("Europe/Kaliningrad", "🇷🇺 Калининград"),
-    ("Europe/Samara", "🇷🇺 Самара"),
-    ("Asia/Yekaterinburg", "🇷🇺 Екатеринбург"),
-    ("Asia/Almaty", "🇰🇿 Алматы"),
-    ("America/New_York", "🇺🇸 Нью-Йорк"),
-]
+from app.features.natal_profile.natal_profile_data import EXIT_WORDS, POPULAR_TIMEZONES
 
 
 def _should_exit(text: str) -> bool:

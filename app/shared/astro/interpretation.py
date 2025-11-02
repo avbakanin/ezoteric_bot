@@ -8,32 +8,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .forecast import ForecastResult
+from .daily_transits import ForecastResult
+from .interpretation_data import ASPECT_NAMES_RU, PLANET_RU
 from .transits import TransitAspect
 
 TEMPLATES_PATH = Path(__file__).resolve().parents[3] / "data" / "transit_templates.json"
-
-
-PLANET_RU: dict[str, str] = {
-    "Sun": "Солнце",
-    "Moon": "Луна",
-    "Mercury": "Меркурий",
-    "Venus": "Венера",
-    "Mars": "Марс",
-    "Jupiter": "Юпитер",
-    "Saturn": "Сатурн",
-    "Uranus": "Уран",
-    "Neptune": "Нептун",
-    "Pluto": "Плутон",
-}
-
-ASPECT_NAMES_RU = {
-    "conjunction": "конъюнкция",
-    "sextile": "секстиль",
-    "square": "квадрат",
-    "trine": "тригон",
-    "opposition": "оппозиция",
-}
 
 
 @dataclass(slots=True)

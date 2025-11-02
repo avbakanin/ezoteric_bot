@@ -30,7 +30,8 @@ async def retro_alerts_command(message: Message, state: FSMContext):
     today_local = get_today_local(tz_name)
 
     periods = retrograde_service.get_periods(today_local, today_local + timedelta(days=120))
-    allowed_planets = retrograde_service.tracked_planets if is_premium_user else ("Mercury",)
+    # Free получают только Меркурий, Premium - все отслеживаемые планеты
+    allowed_planets = retrograde_service.tracked_planets if is_premium_user else retrograde_service.base_planets
 
     blocks: list[str] = []
     for planet in allowed_planets:
@@ -49,7 +50,7 @@ async def retro_alerts_command(message: Message, state: FSMContext):
 
     reply_markup = get_back_to_main_keyboard()
 
-    if not is_premium_user and any(planet != "Mercury" for planet in retrograde_service.tracked_planets):
+    if not is_premium_user and len(retrograde_service.tracked_planets) > len(retrograde_service.base_planets):
         blocks.extend(
             [
                 MessagesData.RETRO_ALERTS_PREMIUM_PROMO,

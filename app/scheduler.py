@@ -366,7 +366,7 @@ class NotificationScheduler:
 
             local_date = local_now.date()
             is_premium_user = is_premium(user_id)
-            allowed_planets: Sequence[str] = retrograde_service.tracked_planets if is_premium_user else ("Mercury",)
+            allowed_planets: Sequence[str] = retrograde_service.tracked_planets if is_premium_user else retrograde_service.base_planets
 
             for planet in allowed_planets:
                 for period in periods_map.get(planet, []):

@@ -8,6 +8,7 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
+from app.features.diary.diary_data import CATEGORY_LABELS
 from app.shared.decorators import catch_errors
 from app.shared.formatters import format_datetime_iso
 from app.shared.helpers import (
@@ -31,15 +32,6 @@ from app.shared.state import UserStates
 from app.shared.storage import user_storage
 
 router = Router()
-
-CATEGORY_LABELS = {
-    "feeling": "Чувство",
-    "event": "Событие",
-    "idea": "Идея",
-    "goal": "Цель/Достижение",
-    "insight": "Инсайт/Знак",
-    "gratitude": "Благодарность",
-}
 
 
 async def _enter_diary(state: FSMContext, send_func, bot, chat_id):

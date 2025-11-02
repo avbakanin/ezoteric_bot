@@ -50,7 +50,7 @@
 - `app/features/natal_chart/router.py`
 - `app/shared/astro/ephemeris.py`
 - `app/shared/astro/transits.py`
-- `app/shared/astro/forecast.py`
+- `app/shared/astro/daily_transits.py`
 - `app/shared/astro/interpretation.py`
 - `app/scheduler.py` (метод `_send_daily_transit_forecasts`).
 

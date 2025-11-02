@@ -7,25 +7,12 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
+from app.features.categories.categories_data import CATEGORY_HANDLERS
 from app.shared.decorators import catch_errors
-from app.shared.keyboards.categories import (
-    get_astrology_menu_keyboard,
-    get_category_description_text,
-    get_numerology_menu_keyboard,
-    get_practices_menu_keyboard,
-    get_profile_menu_keyboard,
-)
+from app.shared.keyboards.categories import get_category_description_text
 from app.shared.messages import MessagesData
 
 router = Router()
-
-# Обработчики текстовых команд категорий
-CATEGORY_HANDLERS = {
-    "🧮 Нумерология": ("category:numerology", get_numerology_menu_keyboard),
-    "🌌 Астрология": ("category:astrology", get_astrology_menu_keyboard),
-    "🔮 Практики": ("category:practices", get_practices_menu_keyboard),
-    "📊 Профиль": ("category:profile", get_profile_menu_keyboard),
-}
 
 
 @router.message(F.text.in_(CATEGORY_HANDLERS.keys()), StateFilter("*"))
