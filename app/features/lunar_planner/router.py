@@ -13,7 +13,6 @@ from aiogram.types import CallbackQuery, InlineKeyboardButton, Message
 from app.shared.astro import daily_transit_service
 from app.shared.astro.lunar_planner import (
     ACTIONS,
-    HOUSE_NAMES,
     ActionDefinition,
     ActionSuggestion,
     DayContext,
@@ -189,13 +188,13 @@ def _format_day_section(
         f"Предупреждение: {ctx.moon_sign.caution}",
     ]
     
-    # Персональная информация о доме (только для Premium с заполненным профилем)
+    # Персональная информация о доме (компактно, только для Premium с профилем)
+    # Интегрируем естественно в раздел "Рекомендуется" или добавляем одну строку
     if has_natal_profile and ctx.natal_house:
-        house_name = HOUSE_NAMES.get(ctx.natal_house, f"{ctx.natal_house}-й дом")
         house_interpretation = get_house_interpretation(ctx.natal_house)
-        lines.append(f"\n🧭 Персональный фокус: Луна в вашем {house_name}")
         if house_interpretation:
-            lines.append(f"💫 {house_interpretation}")
+            # Добавляем как дополнительную рекомендацию, но без лишних эмодзи
+            lines.append(f"Персональный акцент: {house_interpretation}")
 
     if suggestions:
         lines.append("Лучшие дела:")

@@ -8,7 +8,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from app.shared.decorators import catch_errors
-from app.shared.keyboards import get_about_keyboard, get_main_menu_keyboard
+from app.shared.keyboards import get_about_keyboard
+from app.shared.keyboards.categories import get_main_menu_keyboard_categorized
 from app.shared.messages import CommandsData, MessagesData, TextCommandsData
 
 logger = logging.getLogger(__name__)
@@ -22,14 +23,14 @@ async def start_command(message: Message, state: FSMContext):
     user_id = message.from_user.id
     logger.info("Пользователь %s запустил бота", user_id)
     await state.clear()
-    await message.answer(MessagesData.START, reply_markup=get_main_menu_keyboard())
+    await message.answer(MessagesData.START, reply_markup=get_main_menu_keyboard_categorized())
 
 
 @router.message(Command(CommandsData.MENU), StateFilter("*"))
 @catch_errors()
 async def menu_command(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer(MessagesData.MAIN_MENU, reply_markup=get_main_menu_keyboard())
+    await message.answer(MessagesData.MAIN_MENU, reply_markup=get_main_menu_keyboard_categorized())
 
 
 @router.message(Command(CommandsData.HELP), StateFilter("*"))

@@ -15,8 +15,8 @@ from app.shared.keyboards import (
     get_diary_category_keyboard,
     get_diary_history_keyboard,
     get_diary_result_keyboard,
-    get_main_menu_keyboard,
 )
+from app.shared.keyboards.categories import get_main_menu_keyboard_categorized
 from app.shared.messages import CallbackData, DiaryMessages, MessagesData, TextCommandsData
 from app.shared.security import security_validator
 from app.shared.state import UserStates
@@ -83,7 +83,7 @@ async def _schedule_diary_timeout(state: FSMContext, bot, chat_id: int, start_ti
     await bot.send_message(
         chat_id,
         MessagesData.SELECT_ACTION,
-        reply_markup=get_main_menu_keyboard(),
+        reply_markup=get_main_menu_keyboard_categorized(),
     )
 
 

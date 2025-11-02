@@ -5,7 +5,8 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
-from app.shared.keyboards import get_about_keyboard, get_main_menu_keyboard
+from app.shared.keyboards import get_about_keyboard
+from app.shared.keyboards.categories import get_main_menu_keyboard_categorized
 from app.shared.messages import CallbackData, MessagesData
 
 router = Router()
@@ -18,7 +19,7 @@ async def back_main_handler(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.message.edit_text(MessagesData.MAIN_MENU)
     await callback_query.message.answer(
         MessagesData.SELECT_ACTION,
-        reply_markup=get_main_menu_keyboard(),
+        reply_markup=get_main_menu_keyboard_categorized(),
     )
 
 

@@ -6,6 +6,7 @@ from .admin.router import router as admin_router
 from .affirmation.router import router as affirmation_router
 from .aspect_of_day.router import router as aspect_of_day_router
 from .base.router import router as base_router
+from .categories.router import router as categories_router
 from .compatibility.router import router as compatibility_router
 from .daily_number.router import router as daily_number_router
 from .diary.router import router as diary_router
@@ -26,6 +27,7 @@ from .yes_no.router import router as yes_no_router
 def setup_routers(dp: Dispatcher) -> None:
     routers = [
         admin_router,
+        categories_router,  # Категории должны быть перед другими роутерами для обработки категорийных кнопок
         navigation_router,
         profile_router,
         natal_profile_router,
