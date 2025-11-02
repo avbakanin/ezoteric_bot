@@ -19,6 +19,7 @@ from app.shared.birth_profiles import (
     validate_timezone,
 )
 from app.shared.decorators import catch_errors
+from app.shared.formatters import format_iso_to_display
 from app.shared.geocoding import GeocodeResult, geocode_candidates
 from app.shared.keyboards import get_back_to_main_keyboard, get_yes_no_keyboard
 from app.shared.messages import CallbackData, CommandsData, MessagesData
@@ -51,11 +52,6 @@ def _should_exit(text: str) -> bool:
     return text.strip().lower() in EXIT_WORDS
 
 
-def _format_iso_to_display(iso_date: str) -> str:
-    try:
-        return datetime.fromisoformat(iso_date).strftime("%d.%m.%Y")
-    except ValueError:
-        return iso_date
 
 
 async def _update_collected(state: FSMContext, **kwargs: Any) -> dict[str, Any]:
@@ -308,7 +304,7 @@ async def start_natal_profile(message: Message, state: FSMContext):
     await state.update_data(state_payload)
 
     if existing_birth_date_iso:
-        display_date = _format_iso_to_display(existing_birth_date_iso)
+        display_date = format_iso_to_display(existing_birth_date_iso)
         prompt = MessagesData.NATAL_PROFILE_PROMPT_DATE_WITH_EXISTING.format(date=display_date)
     else:
         prompt = MessagesData.NATAL_PROFILE_PROMPT_DATE
@@ -332,7 +328,7 @@ async def handle_birth_date(message: Message, state: FSMContext):
         await message.answer(MessagesData.NATAL_PROFILE_PROMPT_DATE)
         return
 
-    display_date = _format_iso_to_display(birth_date_iso)
+    display_date = format_iso_to_display(birth_date_iso)
     await _update_collected(state, birth_date=birth_date_iso, birth_date_display=display_date)
     await message.answer(MessagesData.NATAL_PROFILE_DATE_SAVED.format(date=display_date))
 

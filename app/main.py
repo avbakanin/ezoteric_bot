@@ -56,6 +56,11 @@ async def on_shutdown():
     logger.info("Бот остановлен!")
 
     try:
+        # Сохраняем все ожидающие изменения в storage
+        from app.shared.storage import user_storage
+        await user_storage.flush_pending_saves()
+        logger.info("Все изменения сохранены")
+        
         # Останавливаем планировщик уведомлений
         bot_instance = Bot(token=config.BOT_TOKEN)
         notification_scheduler = get_scheduler(bot_instance)

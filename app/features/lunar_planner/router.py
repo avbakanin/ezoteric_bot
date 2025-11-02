@@ -19,6 +19,7 @@ from app.shared.astro.lunar_planner import (
     lunar_planner_service,
 )
 from app.shared.decorators import catch_errors
+from app.shared.formatters import format_date_label, pluralize_days
 from app.shared.helpers import get_today_local, get_user_timezone, is_premium
 from app.shared.keyboards import get_lunar_actions_keyboard
 from app.shared.messages import CallbackData, CommandsData, MessagesData, TextCommandsData
@@ -125,7 +126,7 @@ def _build_overview_text(
     parts: List[str] = [
         MessagesData.LUNAR_PLANNER_INTRO.format(
             days=days_count,
-            days_word=_pluralize_days(days_count),
+            days_word=pluralize_days(days_count),
         ),
         f"Часовой пояс: {tz_name}",
     ]
@@ -155,7 +156,7 @@ def _format_day_section(
     suggestions: Sequence[ActionSuggestion],
 ) -> str:
     ctx = window[index]
-    date_label = _format_date_label(ctx.date)
+    date_label = format_date_label(ctx.date)
     span = _calculate_sign_span(window, index)
     lines = [
         f"{ctx.phase.emoji} {date_label} — {ctx.phase.title}",
@@ -222,7 +223,7 @@ def _build_action_details(action: ActionDefinition, window: Sequence[DayContext]
 
 
 def _format_action_day_line(ctx, advice: PhaseAdvice, include_caution: bool = False) -> str:
-    label = _format_date_label(ctx.date)
+    label = format_date_label(ctx.date)
     line = (
         f"• {ctx.phase.emoji} {label} — {ctx.phase.title}. "
         f"Луна в {ctx.moon_sign.emoji} {ctx.moon_sign.title}: {advice.text}"
@@ -281,25 +282,10 @@ def _calculate_sign_span(window: Sequence[DayContext], index: int) -> int:
 def _format_sign_duration(span: int) -> str:
     if span <= 1:
         return "только сегодня"
-    return f"в ближайшие {span} {_pluralize_days(span)}"
+    return f"в ближайшие {span} {pluralize_days(span)}"
 
 
 
 
-def _pluralize_days(value: int) -> str:
-    remainder = value % 100
-    if 11 <= remainder <= 14:
-        return "дней"
-    remainder = value % 10
-    if remainder == 1:
-        return "день"
-    if remainder in (2, 3, 4):
-        return "дня"
-    return "дней"
-
-
-def _format_date_label(target_date: date) -> str:
-    weekdays = ("пн", "вт", "ср", "чт", "пт", "сб", "вс")
-    return f"{target_date.strftime('%d.%m')} ({weekdays[target_date.weekday()]})"
 
 

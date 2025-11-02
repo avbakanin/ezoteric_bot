@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from datetime import datetime
@@ -16,6 +17,30 @@ class UserStorage:
         base_dir = Path(__file__).resolve().parent.parent.parent
         self.storage_file = base_dir / storage_file
         self.data: Dict[str, Any] = self._load_data()
+        # Асинхронное сохранение
+        self._save_task: Optional[asyncio.Task] = None
+        self._pending_save = False
+        self._last_save_time = 0.0
+        self._save_lock: Optional[asyncio.Lock] = None  # Инициализируем при первом использовании
+        self._save_debounce_delay = 0.5  # Сохранять максимум раз в 0.5 секунды
+    
+    async def flush_pending_saves(self):
+        """Принудительно сохраняет все ожидающие изменения (используется при shutdown)."""
+        if self._pending_save:
+            try:
+                if self._save_lock is None:
+                    self._save_lock = asyncio.Lock()
+                await self._save_data_async()
+                # Ждем завершения задачи, если она запущена
+                if self._save_task and not self._save_task.done():
+                    await self._save_task
+            except Exception as e:
+                logger.error(f"Ошибка при финальном сохранении: {e}", exc_info=True)
+                # В случае ошибки пытаемся сохранить синхронно
+                try:
+                    self._save_data_sync()
+                except Exception as sync_error:
+                    logger.error(f"Критическая ошибка синхронного сохранения: {sync_error}")
 
     def _load_data(self) -> Dict[str, Any]:
         if self.storage_file.exists():
@@ -29,7 +54,8 @@ class UserStorage:
                 return {}
         return {}
 
-    def _save_data(self):
+    def _save_data_sync(self):
+        """Синхронное сохранение данных (используется при инициализации)."""
         try:
             backup_file = f"{self.storage_file}.backup"
             if self.storage_file.exists():
@@ -38,9 +64,74 @@ class UserStorage:
                         dst.write(src.read())
             with open(self.storage_file, "w", encoding="utf-8") as f:
                 json.dump(self.data, f, ensure_ascii=False, indent=2)
+            logger.debug(f"Данные сохранены в {self.storage_file}")
         except Exception as e:
-            logger.error(f"Ошибка сохранения данных: {e}")
+            logger.error(f"Ошибка сохранения данных: {e}", exc_info=True)
             raise
+
+    async def _save_data_async(self):
+        """Асинхронное сохранение данных с debouncing."""
+        # Инициализируем lock при необходимости
+        if self._save_lock is None:
+            self._save_lock = asyncio.Lock()
+        
+        async with self._save_lock:
+            if not self._pending_save:
+                return
+            
+            # Debouncing: проверяем, прошло ли достаточно времени с последнего сохранения
+            loop = asyncio.get_event_loop()
+            current_time = loop.time()
+            time_since_last_save = current_time - self._last_save_time
+            
+            if time_since_last_save < self._save_debounce_delay:
+                # Ждем оставшееся время
+                await asyncio.sleep(self._save_debounce_delay - time_since_last_save)
+            
+            try:
+                # Сохраняем данные синхронно (I/O операция)
+                # Используем run_in_executor для неблокирующей записи
+                await loop.run_in_executor(None, self._save_data_sync)
+                self._last_save_time = loop.time()
+                self._pending_save = False
+            except Exception as e:
+                logger.error(f"Ошибка асинхронного сохранения данных: {e}", exc_info=True)
+
+    def _save_data(self, immediate: bool = False):
+        """
+        Помечает данные для сохранения и запускает асинхронное сохранение.
+        
+        Args:
+            immediate: Если True, сохраняет немедленно (блокирующий вызов)
+        """
+        if immediate:
+            # Для критичных операций (например, при старте) сохраняем сразу
+            self._save_data_sync()
+            self._pending_save = False
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    self._last_save_time = loop.time()
+                else:
+                    self._last_save_time = 0.0
+            except RuntimeError:
+                self._last_save_time = 0.0
+        else:
+            # Для обычных операций запускаем асинхронное сохранение
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # Если событийный цикл запущен, создаем задачу
+                    if self._save_task is None or self._save_task.done():
+                        self._save_task = loop.create_task(self._save_data_async())
+                else:
+                    # Если цикл не запущен, запускаем синхронно
+                    loop.run_until_complete(self._save_data_async())
+            except RuntimeError:
+                # Если нет активного event loop, сохраняем синхронно
+                logger.warning("Нет активного event loop, сохранение синхронно")
+                self._save_data_sync()
+                self._pending_save = False
 
     def _get_user(self, user_id: int) -> Dict[str, Any]:
         uid = str(user_id)
@@ -107,6 +198,11 @@ class UserStorage:
                 "number": None,
                 "text": None,
             },
+            "tarot_cache": {
+                "single_card": {"date": None, "card": None, "interpretation": None},
+                "daily_three": {"date": None, "cards": None, "interpretations": None},
+            },
+            "tarot_history": [],
             "retro_alerts": {},
             "created_at": now,
             "last_activity": now,
@@ -144,6 +240,13 @@ class UserStorage:
                 "daily_number_result": None,
                 "birth_date": None,
             }
+            # Сбрасываем кэш Таро для дневных раскладов
+            if "tarot_cache" in user:
+                for spread_key in ["single_card", "daily_three"]:
+                    if spread_key in user["tarot_cache"]:
+                        cache = user["tarot_cache"][spread_key]
+                        if cache.get("date") != today:
+                            user["tarot_cache"][spread_key] = {"date": None, "cards": None, "interpretations": None}
             user["repeat_views"] = 0
             self._save_data()
 
@@ -336,7 +439,7 @@ class UserStorage:
             del self.data[user_id]
 
         if users_to_delete:
-            self._save_data()
+            self._save_data(immediate=True)  # Критичное сохранение при очистке
             logger.info(f"Удалено {len(users_to_delete)} неактивных пользователей")
 
         return len(users_to_delete)
@@ -410,6 +513,50 @@ class UserStorage:
     def get_daily_number_cache(self, user_id: int) -> dict[str, Any]:
         user = self.get_user(user_id)
         return user.get("daily_number", {})
+
+    def get_tarot_cache(self, user_id: int, spread_key: str) -> dict[str, Any] | None:
+        """Получает кэш расклада Таро для пользователя."""
+        user = self._get_user(user_id)
+        tarot_cache = user.get("tarot_cache", {})
+        return tarot_cache.get(spread_key)
+
+    def set_tarot_cache(self, user_id: int, spread_key: str, date: str, cache_data: dict[str, Any]):
+        """Сохраняет кэш расклада Таро для пользователя."""
+        user = self._get_user(user_id)
+        if "tarot_cache" not in user:
+            user["tarot_cache"] = {}
+        user["tarot_cache"][spread_key] = {
+            "date": date,
+            **cache_data,
+        }
+        self._save_data()
+
+    def add_tarot_reading(self, user_id: int, spread_key: str, question: str | None, cards: list[dict], interpretations: list[dict]):
+        """Добавляет расклад в историю пользователя."""
+        user = self._get_user(user_id)
+        if "tarot_history" not in user:
+            user["tarot_history"] = []
+        
+        reading = {
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "spread_key": spread_key,
+            "question": question,
+            "cards": cards,
+            "interpretations": interpretations,
+        }
+        
+        user["tarot_history"].append(reading)
+        # Храним последние 100 раскладов
+        if len(user["tarot_history"]) > 100:
+            user["tarot_history"] = user["tarot_history"][-100:]
+        
+        self._save_data()
+
+    def get_tarot_history(self, user_id: int, limit: int = 10) -> list[dict[str, Any]]:
+        """Получает историю раскладов пользователя."""
+        user = self._get_user(user_id)
+        history = user.get("tarot_history", [])
+        return history[-limit:] if limit else history
 
     def set_daily_number_cache(self, user_id: int, date: str, number: int, text: str):
         user = self.get_user(user_id)

@@ -34,6 +34,9 @@ from .profile import get_profile_keyboard
 # Результаты
 from .results import get_compatibility_result_keyboard, get_result_keyboard
 
+# Таро
+from .tarot import get_back_to_tarot_keyboard, get_spreads_keyboard, get_tarot_question_keyboard
+
 __all__ = [
     # Главное меню
     "get_main_menu_keyboard",
@@ -59,4 +62,8 @@ __all__ = [
     "get_affirmation_keyboard",
     # Лунный планировщик
     "get_lunar_actions_keyboard",
+    # Таро
+    "get_back_to_tarot_keyboard",
+    "get_spreads_keyboard",
+    "get_tarot_question_keyboard",
 ]

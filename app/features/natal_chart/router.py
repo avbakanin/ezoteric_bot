@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -12,6 +10,7 @@ from aiogram.types import Message
 from app.shared.astro import ForecastResult, daily_transit_service, transit_interpreter
 from app.shared.birth_profiles import birth_profile_storage
 from app.shared.decorators import catch_errors
+from app.shared.formatters import format_iso_to_display
 from app.shared.helpers import is_premium
 from app.shared.keyboards import get_back_to_main_keyboard, get_premium_info_keyboard
 from app.shared.messages import CommandsData, MessagesData, TextCommandsData
@@ -19,11 +18,6 @@ from app.shared.messages import CommandsData, MessagesData, TextCommandsData
 router = Router()
 
 
-def _format_iso_to_display(iso_date: str) -> str:
-    try:
-        return datetime.fromisoformat(iso_date).strftime("%d.%m.%Y")
-    except (TypeError, ValueError):
-        return iso_date or "—"
 
 
 def _format_missing_fields(result: ForecastResult) -> str:
@@ -122,7 +116,7 @@ async def handle_natal_chart_history(message: Message, state: FSMContext):
         return
 
     date_str = record.get("date")
-    display_date = _format_iso_to_display(date_str) if date_str else "—"
+    display_date = format_iso_to_display(date_str) if date_str else "—"
     lines = [
         MessagesData.NATAL_CHART_HISTORY_TITLE.format(date=display_date),
         record.get("text", ""),

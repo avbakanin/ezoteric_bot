@@ -19,6 +19,7 @@ from .navigation.router import router as navigation_router
 from .premium.router import router as premium_router
 from .profile.router import router as profile_router
 from .retro_alerts.router import router as retro_alerts_router
+from .tarot.router import router as tarot_router
 from .yes_no.router import router as yes_no_router
 
 
@@ -40,6 +41,7 @@ def setup_routers(dp: Dispatcher) -> None:
         name_number_router,
         yes_no_router,
         daily_number_router,
+        tarot_router,
         premium_router,
         base_router,
     ]

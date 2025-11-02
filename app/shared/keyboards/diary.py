@@ -7,9 +7,18 @@ from ..messages import CallbackData, DiaryMessages
 
 def get_diary_category_keyboard() -> InlineKeyboardMarkup:
     buttons = [
-        [InlineKeyboardButton(text="✨ Чувство", callback_data="diary_category:feeling")],
-        [InlineKeyboardButton(text="📅 Событие", callback_data="diary_category:event")],
-        [InlineKeyboardButton(text="💡 Идея", callback_data="diary_category:idea")],
+        [
+            InlineKeyboardButton(text="✨ Чувство", callback_data="diary_category:feeling"),
+            InlineKeyboardButton(text="📅 Событие", callback_data="diary_category:event"),
+        ],
+        [
+            InlineKeyboardButton(text="💡 Идея", callback_data="diary_category:idea"),
+            InlineKeyboardButton(text="🎯 Цель", callback_data="diary_category:goal"),
+        ],
+        [
+            InlineKeyboardButton(text="🔮 Инсайт", callback_data="diary_category:insight"),
+            InlineKeyboardButton(text="🙏 Благодарность", callback_data="diary_category:gratitude"),
+        ],
         [InlineKeyboardButton(text="➡️ Пропустить", callback_data="diary_category:skip")],
         [InlineKeyboardButton(text="↩️ Выйти", callback_data="diary_category:cancel")],
     ]

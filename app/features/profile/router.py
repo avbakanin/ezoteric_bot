@@ -1,7 +1,5 @@
 """Профиль пользователя."""
 
-from datetime import datetime
-
 from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -9,6 +7,7 @@ from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
 
 from app.settings import config
 from app.shared.decorators import catch_errors
+from app.shared.formatters import format_iso_to_display
 from app.shared.keyboards import get_premium_info_keyboard, get_profile_keyboard
 from app.shared.messages import (
     CallbackData,
@@ -31,10 +30,7 @@ def _build_profile_view(user_id: int) -> tuple[str, InlineKeyboardMarkup]:
     expires_raw = subscription.get("expires")
     expires_display = None
     if subscription_active and expires_raw:
-        try:
-            expires_display = datetime.fromisoformat(expires_raw).strftime("%d.%m.%Y")
-        except ValueError:
-            expires_display = expires_raw
+        expires_display = format_iso_to_display(expires_raw, default=expires_raw)
     premium_cta = (
         MessagesData.PROFILE_PREMIUM_ACTIVE
         if subscription_active

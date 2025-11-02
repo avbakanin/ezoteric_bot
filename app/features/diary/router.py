@@ -1,7 +1,7 @@
 """Дневник наблюдений."""
 
 import asyncio
-from datetime import datetime
+import datetime
 
 from aiogram import F, Router
 from aiogram.filters import StateFilter
@@ -9,6 +9,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from app.shared.decorators import catch_errors
+from app.shared.formatters import format_datetime_iso
 from app.shared.keyboards import (
     get_back_to_main_keyboard,
     get_diary_category_keyboard,
@@ -27,6 +28,9 @@ CATEGORY_LABELS = {
     "feeling": "Чувство",
     "event": "Событие",
     "idea": "Идея",
+    "goal": "Цель/Достижение",
+    "insight": "Инсайт/Знак",
+    "gratitude": "Благодарность",
 }
 
 
@@ -149,7 +153,7 @@ async def handle_diary_observation(message: Message, state: FSMContext):
 
     observation = {
         "text": sanitized_text,
-        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "date": format_datetime_iso(),
         "number": user_data.get("life_path_number", "неизвестно"),
         "category": category,
     }

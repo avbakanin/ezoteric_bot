@@ -1,7 +1,5 @@
 """Число дня с премиальным прогнозом."""
 
-from datetime import datetime
-
 from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -9,6 +7,7 @@ from aiogram.types import CallbackQuery, Message
 
 from app.shared.calculations import calculate_daily_number
 from app.shared.decorators import catch_errors
+from app.shared.formatters import format_today_iso
 from app.shared.helpers import is_premium
 from app.shared.keyboards import get_back_to_main_keyboard, get_premium_info_keyboard
 from app.shared.messages import (
@@ -34,7 +33,7 @@ async def _send_daily_number(send_func, user_id: int):
         )
         return
 
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = format_today_iso()
     cache = user_storage.get_daily_number_cache(user_id)
 
     if cache and cache.get("date") == today:

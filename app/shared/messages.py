@@ -15,9 +15,6 @@ class CommandsData:
     MENU: str = "menu"
     HELP: str = "help"
     PREMIUM_INFO: str = "premium_info"
-    START: str = "start"
-    FEEDBACK: str = "feedback"
-    FEEDBACK: str = "feedback"
     FEEDBACK: str = "feedback"
     PREMIUM_ADMIN: str = "premium"
     NATAL_PROFILE: str = "natal_profile"
@@ -26,6 +23,7 @@ class CommandsData:
     RETRO_ALERTS: str = "retro_alerts"
     ASPECT_OF_DAY: str = "aspect_of_day"
     LUNAR_PLANNER: str = "lunar_planner"
+    TAROT: str = "tarot"
 
 
 class CallbackData:
@@ -56,6 +54,11 @@ class CallbackData:
     DAILY_NUMBER: str = "daily_number"
     NOTIFICATIONS_TOGGLE: str = "notifications_toggle"
     LUNAR_ACTION_PREFIX: str = "lunar_action:"
+    TAROT_SPREAD_PREFIX: str = "tarot_spread:"
+    TAROT_SELECT_SPREAD: str = "tarot_select_spread"
+    TAROT_PREMIUM_SPREADS: str = "tarot_premium_spreads"
+    TAROT_QUESTION_SKIP: str = "tarot_question_skip"
+    TAROT_HISTORY: str = "tarot_history"
 
 
 class TextCommandsData:
@@ -76,6 +79,7 @@ class TextCommandsData:
     RETRO_ALERTS: str = "♻️ Ретро"
     ASPECT_OF_DAY: str = "🌟 Аспект"
     LUNAR_PLANNER: str = "🌙 Планировщик"
+    TAROT: str = "🔮 Таро"
 
 
 class MessagesData:
@@ -331,6 +335,36 @@ class MessagesData:
         "Напишите его текстом — я подскажу интуитивный ответ."
     )
     YES_NO_EMPTY: str = "❌ Вопрос не распознан. Отправьте текст, чтобы я мог ответить."
+    TAROT_INTRO: str = (
+        "🔮 ТАРО\n\n"
+        "Выберите расклад для гадания. Каждый расклад даст вам инсайты и ответы на ваши вопросы."
+    )
+    TAROT_SPREAD_SELECTED: str = "🎴 Выбран расклад: {spread_name}\n\n{description}"
+    TAROT_RESULT_HEADER: str = "🔮 Результат расклада: {spread_name}\n\n"
+    TAROT_PREMIUM_REQUIRED: str = (
+        "💎 Этот расклад доступен только в Premium.\n"
+        "Оформите подписку, чтобы получить доступ к расширенным раскладам."
+    )
+    TAROT_CARD_DAY: str = "📅 Карта дня: {card_name} {card_emoji}"
+    TAROT_YES_NO_ANSWER: str = "🔮 Ответ: {answer}\n\n{explanation}"
+    TAROT_QUESTION_PROMPT: str = (
+        "💭 Сформулируйте ваш вопрос к картам Таро (или нажмите 'Пропустить'):\n\n"
+        "Чем конкретнее вопрос, тем точнее будет интерпретация. Например:\n"
+        "• 'Что ожидает меня в отношениях?'\n"
+        "• 'Как развивается моя карьера?'\n"
+        "• 'Что нужно учесть в ближайшее время?'"
+    )
+    TAROT_QUESTION_SKIP: str = "⏭️ Пропустить вопрос"
+    TAROT_HISTORY_EMPTY: str = "📜 История раскладов пуста. Сделайте первый расклад!"
+    TAROT_HISTORY_TITLE: str = "📜 История ваших раскладов ({count}):\n"
+    TAROT_HISTORY_ITEM: str = (
+        "\n━━━━━━━━━━━━━━━━━━━━\n"
+        "📅 {date}\n"
+        "🎴 {spread_name}\n"
+        "{question_line}"
+        "🃏 Карты: {cards}"
+    )
+    TAROT_HISTORY_QUESTION: str = "💭 Вопрос: {question}\n"
     NAME_NUMBER_PROMPT: str = (
         "Введите имя или полное ФИО. Я рассчитаю число имени по нумерологии.\n"
         "Можно использовать русские и латинские буквы."

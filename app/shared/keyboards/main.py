@@ -24,6 +24,9 @@ def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
                 KeyboardButton(text=TextCommandsData.YES_NO),
             ],
             [
+                KeyboardButton(text=TextCommandsData.TAROT),
+            ],
+            [
                 KeyboardButton(text=TextCommandsData.NATAL_CHART),
                 KeyboardButton(text=TextCommandsData.ASPECT_OF_DAY),
             ],

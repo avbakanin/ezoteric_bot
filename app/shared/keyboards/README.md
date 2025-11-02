@@ -53,6 +53,14 @@
 
 - `get_yes_no_keyboard()` - Клавиатура с кнопками Да/Нет
 
+### 📁 `tarot.py` - Таро
+
+Клавиатуры для функции гадания на картах Таро.
+
+- `get_spreads_keyboard(available_spreads, is_premium)` - Клавиатура выбора расклада
+- `get_back_to_tarot_keyboard()` - Клавиатура возврата к выбору расклада
+- `get_tarot_question_keyboard()` - Клавиатура для вопроса перед раскладом
+
 ## Использование
 
 Все клавиатуры доступны через главный модуль:
@@ -68,6 +76,9 @@ from app.shared.keyboards import (
     get_premium_info_keyboard,
     get_feedback_keyboard,
     get_yes_no_keyboard,
+    get_spreads_keyboard,
+    get_back_to_tarot_keyboard,
+    get_tarot_question_keyboard,
 )
 ```
 
