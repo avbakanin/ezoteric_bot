@@ -10,12 +10,15 @@ from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton, Message
 
+from app.shared.astro import daily_transit_service
 from app.shared.astro.lunar_planner import (
     ACTIONS,
+    HOUSE_NAMES,
     ActionDefinition,
     ActionSuggestion,
     DayContext,
     PhaseAdvice,
+    get_house_interpretation,
     lunar_planner_service,
 )
 from app.shared.decorators import catch_errors
@@ -37,8 +40,15 @@ async def lunar_planner_command(message: Message, state: FSMContext):
     tz_name = get_user_timezone(user_id)
     today = get_today_local(tz_name)
 
+    # Получаем натальную карту для персонализации (только для Premium)
+    natal_chart = None
+    if is_premium_user:
+        forecast = daily_transit_service.generate_for_user(user_id, target_date=today)
+        if forecast.ok and forecast.natal_chart:
+            natal_chart = forecast.natal_chart
+
     days_count = 6 if is_premium_user else 4
-    window = lunar_planner_service.build_window(start=today, tz_name=tz_name, days=days_count)
+    window = lunar_planner_service.build_window(start=today, tz_name=tz_name, days=days_count, natal_chart=natal_chart)
 
     suggestions_map = {
         ctx.date: lunar_planner_service.select_actions(
@@ -54,6 +64,7 @@ async def lunar_planner_command(message: Message, state: FSMContext):
         suggestions_map=suggestions_map,
         tz_name=tz_name,
         is_premium=is_premium_user,
+        has_natal_profile=bool(natal_chart),
     )
 
     display_actions = _collect_display_actions(window, is_premium_user, limit=12 if is_premium_user else 8)
@@ -92,7 +103,14 @@ async def lunar_planner_action_callback(callback: CallbackQuery, state: FSMConte
         await callback.answer("Сценарий доступен в Premium.", show_alert=True)
         return
 
-    window = lunar_planner_service.build_window(start=today, tz_name=tz_name, days=7 if is_premium_user else 5)
+    # Получаем натальную карту для персонализации (только для Premium)
+    natal_chart = None
+    if is_premium_user:
+        forecast = daily_transit_service.generate_for_user(user_id, target_date=today)
+        if forecast.ok and forecast.natal_chart:
+            natal_chart = forecast.natal_chart
+
+    window = lunar_planner_service.build_window(start=today, tz_name=tz_name, days=7 if is_premium_user else 5, natal_chart=natal_chart)
 
     details_text = _build_action_details(action, window)
 
@@ -121,6 +139,7 @@ def _build_overview_text(
     suggestions_map: dict[date, Sequence[ActionSuggestion]],
     tz_name: str,
     is_premium: bool,
+    has_natal_profile: bool = False,
 ) -> str:
     days_count = len(window)
     parts: List[str] = [
@@ -133,7 +152,7 @@ def _build_overview_text(
 
     for idx, ctx in enumerate(window):
         suggestions = suggestions_map.get(ctx.date, [])
-        parts.append(_format_day_section(window, idx, suggestions))
+        parts.append(_format_day_section(window, idx, suggestions, has_natal_profile=has_natal_profile))
 
     parts.append(MessagesData.LUNAR_PLANNER_ACTION_HINT)
 
@@ -154,6 +173,7 @@ def _format_day_section(
     window: Sequence[DayContext],
     index: int,
     suggestions: Sequence[ActionSuggestion],
+    has_natal_profile: bool = False,
 ) -> str:
     ctx = window[index]
     date_label = format_date_label(ctx.date)
@@ -168,6 +188,14 @@ def _format_day_section(
         f"Рекомендуется: {ctx.moon_sign.recommended}",
         f"Предупреждение: {ctx.moon_sign.caution}",
     ]
+    
+    # Персональная информация о доме (только для Premium с заполненным профилем)
+    if has_natal_profile and ctx.natal_house:
+        house_name = HOUSE_NAMES.get(ctx.natal_house, f"{ctx.natal_house}-й дом")
+        house_interpretation = get_house_interpretation(ctx.natal_house)
+        lines.append(f"\n🧭 Персональный фокус: Луна в вашем {house_name}")
+        if house_interpretation:
+            lines.append(f"💫 {house_interpretation}")
 
     if suggestions:
         lines.append("Лучшие дела:")
