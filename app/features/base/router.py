@@ -39,7 +39,6 @@ async def start_command(message: Message, state: FSMContext):
     # Генерируем ежедневное задание, если его еще нет
     challenge = generate_daily_challenge(user_id)
     if challenge:
-        from app.shared.messages import MessagesData
         from app.shared.storage import user_storage
         challenge_id, challenge_data = challenge
         user_storage.set_daily_challenge(user_id, challenge_id, challenge_data)
