@@ -59,6 +59,7 @@ class CallbackData:
     TAROT_PREMIUM_SPREADS: str = "tarot_premium_spreads"
     TAROT_QUESTION_SKIP: str = "tarot_question_skip"
     TAROT_HISTORY: str = "tarot_history"
+    PROFILE_STATS: str = "profile_stats"
     # Категории меню
     CATEGORY_NUMEROLOGY: str = "category:numerology"
     CATEGORY_ASTROLOGY: str = "category:astrology"
@@ -330,6 +331,65 @@ class MessagesData:
         "Ваш отзыв помогает делать бота лучше."
     )
     UNKNOWN: str = "❓ Не понимаю эту команду. Используйте меню или /help"
+    
+    # Стрики и достижения
+    STREAK_MESSAGE: str = "🔥 Ваша серия дней: {streak} {days_word}!"
+    STREAK_ACHIEVEMENT_UNLOCKED: str = (
+        "🏆 НОВОЕ ДОСТИЖЕНИЕ!\n\n"
+        "{achievement_name}\n"
+        "{achievement_description}\n\n"
+        "Продолжайте в том же духе! ✨"
+    )
+    STREAK_3_NAME: str = "🔥 Первые шаги"
+    STREAK_3_DESC: str = "Используйте бота 3 дня подряд"
+    STREAK_7_NAME: str = "⭐ Недельный стрик"
+    STREAK_7_DESC: str = "Используйте бота 7 дней подряд"
+    STREAK_14_NAME: str = "🌟 Двухнедельный марафон"
+    STREAK_14_DESC: str = "Используйте бота 14 дней подряд"
+    STREAK_30_NAME: str = "💎 Месячный чемпион"
+    STREAK_30_DESC: str = "Используйте бота 30 дней подряд"
+    STREAK_60_NAME: str = "👑 Двухмесячный мастер"
+    STREAK_60_DESC: str = "Используйте бота 60 дней подряд"
+    STREAK_90_NAME: str = "🏆 Трехмесячный легенда"
+    STREAK_90_DESC: str = "Используйте бота 90 дней подряд (3 месяца)!"
+    
+    # Базовые достижения
+    ACHIEVEMENT_FIRST_STEPS_NAME: str = "🥉 Первые шаги"
+    ACHIEVEMENT_FIRST_STEPS_DESC: str = "Рассчитали свое число судьбы"
+    ACHIEVEMENT_EXPLORER_NAME: str = "🗺️ Исследователь"
+    ACHIEVEMENT_EXPLORER_DESC: str = "Использовали 5+ разных функций бота"
+    ACHIEVEMENT_TAROT_MASTER_NAME: str = "🔮 Мастер Таро"
+    ACHIEVEMENT_TAROT_MASTER_DESC: str = "Сделали 10 раскладов Таро"
+    ACHIEVEMENT_TAROT_EXPERT_NAME: str = "🎴 Эксперт Таро"
+    ACHIEVEMENT_TAROT_EXPERT_DESC: str = "Сделали 50 раскладов Таро"
+    ACHIEVEMENT_ASTROLOGER_NAME: str = "🌌 Астролог"
+    ACHIEVEMENT_ASTROLOGER_DESC: str = "Заполнили натальный профиль"
+    ACHIEVEMENT_DIARY_WRITER_NAME: str = "📝 Дневник"
+    ACHIEVEMENT_DIARY_WRITER_DESC: str = "Сделали 7 записей в дневнике"
+    ACHIEVEMENT_DIARY_MASTER_NAME: str = "📔 Мастер дневника"
+    ACHIEVEMENT_DIARY_MASTER_DESC: str = "Сделали 30 записей в дневнике"
+    ACHIEVEMENT_COMPATIBILITY_EXPERT_NAME: str = "💑 Эксперт совместимости"
+    ACHIEVEMENT_COMPATIBILITY_EXPERT_DESC: str = "Проверили совместимость 5 раз"
+    ACHIEVEMENT_NUMEROLOGIST_NAME: str = "🧮 Нумеролог"
+    ACHIEVEMENT_NUMEROLOGIST_DESC: str = "Использовали все нумерологические функции"
+    
+    # Персонализированные рекомендации
+    RECOMMENDATION_PREFIX: str = "💡 Рекомендация"
+    
+    # Ежедневные задания
+    DAILY_CHALLENGE_TITLE: str = "🎯 ЕЖЕДНЕВНОЕ ЗАДАНИЕ"
+    DAILY_CHALLENGE_COMPLETED: str = (
+        "🎉 Задание выполнено!\n\n"
+        "✅ {reward}\n"
+        "🔥 Стрик заданий: {streak} {days_word}"
+    )
+    DAILY_CHALLENGE_NEW: str = (
+        "🎯 Новое ежедневное задание!\n\n"
+        "{title}\n"
+        "{description}\n\n"
+        "💎 Награда: {reward}"
+    )
+    
     BASE_BIRTH_DATE_PROMPT: str = "Введите дату рождения в формате ДД.MM.ГГГГ"
     BIRTH_DATE_PROMPT: str = (
         "Введите дату рождения в формате ДД.ММ.ГГГГ\n"
@@ -556,6 +616,9 @@ def get_profile_text(
     notification_time: str,
     subscription_expires: str | None = None,
     premium_cta: str | None = None,
+    streak_days: int = 0,
+    longest_streak: int = 0,
+    show_extended_stats: bool = False,
 ) -> str:
     """
     Формирует текст профиля пользователя.
@@ -592,6 +655,30 @@ def get_profile_text(
 
     if subscription_expires:
         blocks.append(f"⏳ Доступ активен до: {subscription_expires}")
+    
+    # Добавляем информацию о стрике
+    if streak_days > 0:
+        from .formatters import pluralize_days
+        days_word = pluralize_days(streak_days)
+        # Более детальная градация эмодзи для стриков
+        if streak_days >= 90:
+            streak_emoji = "🏆"
+        elif streak_days >= 60:
+            streak_emoji = "👑"
+        elif streak_days >= 30:
+            streak_emoji = "💎"
+        elif streak_days >= 14:
+            streak_emoji = "🌟"
+        elif streak_days >= 7:
+            streak_emoji = "🔥"
+        elif streak_days >= 3:
+            streak_emoji = "⚡"
+        else:
+            streak_emoji = "✨"
+        blocks.append(f"\n{streak_emoji} Серия дней: {streak_days} {days_word}")
+        if longest_streak > streak_days:
+            longest_word = pluralize_days(longest_streak)
+            blocks.append(f"🏆 Лучшая серия: {longest_streak} {longest_word}")
 
     stats_block = (
         "\n\n"
@@ -602,6 +689,20 @@ def get_profile_text(
         f"💾 Кэш результатов: {'✅ Есть' if has_cached else '❌ Нет'}"
     )
     blocks.append(stats_block)
+    
+    # Добавляем информацию о достижениях
+    from app.shared.storage import user_storage
+    achievements = user_storage.get_achievements(user_id)
+    unlocked_count = len(achievements.get("unlocked", []))
+    if unlocked_count > 0:
+        blocks.append(f"\n🏆 Достижений разблокировано: {unlocked_count}")
+    
+    # Добавляем расширенную статистику если нужно
+    if show_extended_stats:
+        from app.shared.helpers import build_extended_stats_text, is_premium
+        is_premium_user = is_premium(user_id)
+        extended_stats = build_extended_stats_text(user_id, is_premium_user)
+        blocks.append(f"\n{extended_stats}")
 
     if premium_cta:
         blocks.append(f"\n{premium_cta}")

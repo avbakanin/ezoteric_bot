@@ -11,7 +11,15 @@ from aiogram.types import CallbackQuery, Message
 
 from app.shared.decorators import catch_errors
 from app.shared.formatters import format_today_iso
-from app.shared.helpers import is_premium
+from app.shared.helpers import (
+    check_base_achievements,
+    check_daily_challenge_completion,
+    check_streak_achievements,
+    get_achievement_info,
+    get_personalized_recommendation,
+    is_premium,
+    update_user_activity,
+)
 from app.shared.keyboards import (
     get_back_to_main_keyboard,
     get_back_to_tarot_keyboard,
@@ -408,9 +416,50 @@ async def _perform_spread(send_func, user_id: int, spread_key: str, spread_info:
             cards_for_history,
             interpretations_for_history,
         )
+        
+        # Обновляем стрик и статистику
+        streak = update_user_activity(user_id, "tarot")
+        user_storage.increment_stat(user_id, "total_tarot_readings", "tarot")
+        unlocked_streak = check_streak_achievements(user_id, streak)
+        unlocked_base = check_base_achievements(user_id)
+        unlocked = unlocked_streak + unlocked_base
 
         keyboard = get_back_to_tarot_keyboard()
         await send_func(result_text, reply_markup=keyboard)
+        
+        # Показываем достижения, если разблокированы
+        if unlocked:
+            from app.shared.keyboards import get_back_to_main_keyboard
+            from app.shared.messages import MessagesData
+            for achievement_id in unlocked:
+                name, desc = get_achievement_info(achievement_id)
+                achievement_text = MessagesData.STREAK_ACHIEVEMENT_UNLOCKED.format(
+                    achievement_name=name,
+                    achievement_description=desc
+                )
+                await send_func(achievement_text, reply_markup=get_back_to_main_keyboard())
+        
+        # Проверяем выполнение ежедневного задания
+        is_completed, challenge_data = check_daily_challenge_completion(user_id, "tarot")
+        if is_completed and challenge_data:
+            from app.shared.formatters import pluralize_days
+            from app.shared.messages import MessagesData
+            challenges = user_storage.get_daily_challenges(user_id)
+            streak = challenges.get("streak", 0)
+            days_word = pluralize_days(streak)
+            completion_text = MessagesData.DAILY_CHALLENGE_COMPLETED.format(
+                reward=challenge_data.get("reward", "Отлично!"),
+                streak=streak,
+                days_word=days_word
+            )
+            await send_func(completion_text)
+        
+        # Показываем персонализированную рекомендацию
+        recommendation = get_personalized_recommendation(user_id, "tarot")
+        if recommendation:
+            from app.shared.keyboards import get_recommendation_keyboard
+            rec_text, rec_action = recommendation
+            await send_func(rec_text, reply_markup=get_recommendation_keyboard(rec_action))
 
     except Exception as e:
         logger.error("Ошибка при выполнении расклада: %s", e, exc_info=True)

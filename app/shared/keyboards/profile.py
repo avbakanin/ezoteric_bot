@@ -27,6 +27,11 @@ def get_profile_keyboard(
             ],
             [
                 InlineKeyboardButton(
+                    text="📊 Расширенная статистика", callback_data=CallbackData.PROFILE_STATS
+                )
+            ],
+            [
+                InlineKeyboardButton(
                     text=toggle_text, callback_data=CallbackData.NOTIFICATIONS_TOGGLE
                 )
             ],

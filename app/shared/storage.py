@@ -204,6 +204,24 @@ class UserStorage:
             },
             "tarot_history": [],
             "retro_alerts": {},
+            "achievements": {
+                "unlocked": [],
+                "streak_days": 0,
+                "last_activity_date": None,
+                "longest_streak": 0,
+            },
+            "stats": {
+                "total_tarot_readings": 0,
+                "total_diary_entries": 0,
+                "total_days_active": 0,
+                "last_feature_used": None,
+            },
+            "daily_challenges": {
+                "current": None,
+                "completed_today": [],
+                "streak": 0,
+                "last_challenge_date": None,
+            },
             "created_at": now,
             "last_activity": now,
         }
@@ -566,6 +584,205 @@ class UserStorage:
             "text": text,
         }
         self._save_data()
+
+    # -------------------------
+    # Стрики и достижения
+    # -------------------------
+
+    def update_streak(self, user_id: int) -> int:
+        """
+        Обновляет стрик пользователя (серию дней использования).
+        Возвращает новый стрик.
+        """
+        user = self._get_user(user_id)
+        achievements = user.setdefault("achievements", {})
+        today = datetime.now().strftime("%Y-%m-%d")
+        last_date = achievements.get("last_activity_date")
+        
+        # Если уже обновляли сегодня, возвращаем текущий стрик
+        if last_date == today:
+            return achievements.get("streak_days", 0)
+        
+        streak = achievements.get("streak_days", 0)
+        
+        if last_date:
+            try:
+                last_dt = datetime.strptime(last_date, "%Y-%m-%d")
+                today_dt = datetime.strptime(today, "%Y-%m-%d")
+                days_diff = (today_dt - last_dt).days
+                
+                if days_diff == 1:
+                    # Продолжение стрика
+                    streak += 1
+                elif days_diff > 1:
+                    # Стрик прерван, начинаем новый
+                    streak = 1
+                else:
+                    # Тот же день, но еще не обновляли сегодня
+                    streak = max(streak, 1)
+            except ValueError:
+                # Неверный формат даты, начинаем новый стрик
+                streak = 1
+        else:
+            # Первый раз - начинаем стрик
+            streak = 1
+        
+        achievements["streak_days"] = streak
+        achievements["last_activity_date"] = today
+        
+        # Обновляем самый длинный стрик
+        longest = achievements.get("longest_streak", 0)
+        if streak > longest:
+            achievements["longest_streak"] = streak
+        
+        # Обновляем статистику
+        stats = user.setdefault("stats", {})
+        total_days = stats.get("total_days_active", 0)
+        # Увеличиваем счетчик дней только если это новый день
+        if last_date != today:
+            stats["total_days_active"] = total_days + 1
+        
+        self._save_data()
+        return streak
+
+    def get_streak(self, user_id: int) -> int:
+        """Получает текущий стрик пользователя."""
+        user = self._get_user(user_id)
+        achievements = user.get("achievements", {})
+        return achievements.get("streak_days", 0)
+
+    def check_and_unlock_achievement(self, user_id: int, achievement_id: str) -> bool:
+        """
+        Проверяет и разблокирует достижение.
+        Возвращает True, если достижение разблокировано впервые.
+        """
+        user = self._get_user(user_id)
+        achievements = user.setdefault("achievements", {})
+        unlocked = achievements.setdefault("unlocked", [])
+        
+        if achievement_id in unlocked:
+            return False
+        
+        unlocked.append(achievement_id)
+        self._save_data()
+        return True
+
+    def get_achievements(self, user_id: int) -> dict[str, Any]:
+        """Получает информацию о достижениях пользователя."""
+        user = self._get_user(user_id)
+        return user.get("achievements", {
+            "unlocked": [],
+            "streak_days": 0,
+            "last_activity_date": None,
+            "longest_streak": 0,
+        })
+
+    def get_stats(self, user_id: int) -> dict[str, Any]:
+        """Получает статистику пользователя."""
+        user = self._get_user(user_id)
+        return user.get("stats", {
+            "total_tarot_readings": 0,
+            "total_diary_entries": 0,
+            "total_days_active": 0,
+            "last_feature_used": None,
+        })
+
+    def increment_stat(self, user_id: int, stat_name: str, feature_name: str = None):
+        """
+        Увеличивает счетчик статистики.
+        
+        Args:
+            user_id: ID пользователя
+            stat_name: Название статистики (total_tarot_readings, total_diary_entries, etc.)
+            feature_name: Название функции для last_feature_used
+        """
+        user = self._get_user(user_id)
+        stats = user.setdefault("stats", {})
+        stats[stat_name] = stats.get(stat_name, 0) + 1
+        if feature_name:
+            stats["last_feature_used"] = feature_name
+        self._save_data()
+    
+    def get_daily_challenges(self, user_id: int) -> dict[str, Any]:
+        """Получает информацию о ежедневных заданиях пользователя."""
+        user = self._get_user(user_id)
+        return user.get("daily_challenges", {
+            "current": None,
+            "completed_today": [],
+            "streak": 0,
+            "last_challenge_date": None,
+        })
+    
+    def set_daily_challenge(self, user_id: int, challenge_id: str, challenge_data: dict[str, Any]):
+        """Устанавливает ежедневное задание для пользователя."""
+        user = self._get_user(user_id)
+        challenges = user.setdefault("daily_challenges", {})
+        challenges["current"] = {
+            "id": challenge_id,
+            **challenge_data,
+            "date": datetime.now().strftime("%Y-%m-%d"),
+        }
+        self._save_data()
+    
+    def complete_daily_challenge(self, user_id: int) -> bool:
+        """
+        Отмечает текущее задание как выполненное.
+        
+        Returns:
+            True если задание было успешно выполнено (впервые сегодня), False иначе
+        """
+        user = self._get_user(user_id)
+        challenges = user.setdefault("daily_challenges", {})
+        current = challenges.get("current")
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        if not current:
+            return False
+        
+        # Проверяем, что задание на сегодня
+        if current.get("date") != today:
+            return False
+        
+        challenge_id = current.get("id")
+        completed_today = challenges.get("completed_today", [])
+        
+        # Проверяем, не выполнено ли уже сегодня
+        if challenge_id in completed_today:
+            return False
+        
+        # Отмечаем как выполненное
+        completed_today.append(challenge_id)
+        challenges["completed_today"] = completed_today
+        
+        # Обновляем стрик заданий
+        last_challenge_date = challenges.get("last_challenge_date")
+        if last_challenge_date == today:
+            # Уже выполняли сегодня, не увеличиваем стрик
+            pass
+        elif last_challenge_date:
+            try:
+                last_dt = datetime.strptime(last_challenge_date, "%Y-%m-%d")
+                today_dt = datetime.strptime(today, "%Y-%m-%d")
+                days_diff = (today_dt - last_dt).days
+                
+                if days_diff == 1:
+                    # Продолжение стрика
+                    challenges["streak"] = challenges.get("streak", 0) + 1
+                elif days_diff > 1:
+                    # Стрик прерван
+                    challenges["streak"] = 1
+                else:
+                    # Тот же день
+                    challenges["streak"] = max(challenges.get("streak", 0), 1)
+            except ValueError:
+                challenges["streak"] = 1
+        else:
+            # Первый раз
+            challenges["streak"] = 1
+        
+        challenges["last_challenge_date"] = today
+        self._save_data()
+        return True
 
 
 # -------------------------

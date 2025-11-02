@@ -8,7 +8,12 @@ from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
 from app.settings import config
 from app.shared.decorators import catch_errors
 from app.shared.formatters import format_iso_to_display
-from app.shared.keyboards import get_premium_info_keyboard, get_profile_keyboard
+from app.shared.helpers import build_extended_stats_text, is_premium
+from app.shared.keyboards import (
+    get_back_to_main_keyboard,
+    get_premium_info_keyboard,
+    get_profile_keyboard,
+)
 from app.shared.messages import (
     CallbackData,
     CommandsData,
@@ -41,6 +46,11 @@ def _build_profile_view(user_id: int) -> tuple[str, InlineKeyboardMarkup]:
     notifications_enabled = notifications.get("enabled", False)
     notification_time = notifications.get("time") or config.NOTIFICATION_TIME
     has_calculated = user_data.get("birth_date") is not None
+    
+    # Получаем информацию о стриках
+    achievements = user_storage.get_achievements(user_id)
+    streak_days = achievements.get("streak_days", 0)
+    longest_streak = achievements.get("longest_streak", 0)
 
     profile_text = get_profile_text(
         user_id=user_id,
@@ -52,6 +62,8 @@ def _build_profile_view(user_id: int) -> tuple[str, InlineKeyboardMarkup]:
         notification_time=notification_time,
         subscription_expires=expires_display,
         premium_cta=premium_cta,
+        streak_days=streak_days,
+        longest_streak=longest_streak,
     )
     keyboard = get_profile_keyboard(
         has_calculated,
@@ -100,3 +112,17 @@ async def notifications_toggle(callback: CallbackQuery):
 
     profile_text, keyboard = _build_profile_view(user_id)
     await callback.message.edit_text(profile_text, reply_markup=keyboard)
+
+
+@router.callback_query(F.data == CallbackData.PROFILE_STATS)
+@catch_errors()
+async def profile_stats_callback(callback: CallbackQuery):
+    """Обработчик кнопки расширенной статистики."""
+    user_id = callback.from_user.id
+    is_premium_user = is_premium(user_id)
+    
+    # Для бесплатных пользователей показываем базовую статистику с промо
+    extended_stats = build_extended_stats_text(user_id, is_premium_user)
+    
+    await callback.message.answer(extended_stats, reply_markup=get_back_to_main_keyboard())
+    await callback.answer()

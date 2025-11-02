@@ -21,6 +21,7 @@ from app.shared.birth_profiles import (
 from app.shared.decorators import catch_errors
 from app.shared.formatters import format_iso_to_display
 from app.shared.geocoding import GeocodeResult, geocode_candidates
+from app.shared.helpers import check_base_achievements, get_achievement_info, update_user_activity
 from app.shared.keyboards import get_back_to_main_keyboard, get_yes_no_keyboard
 from app.shared.messages import CallbackData, CommandsData, MessagesData
 from app.shared.state import NatalProfileStates
@@ -252,7 +253,23 @@ async def _save_profile_and_finish(message: Message, state: FSMContext) -> None:
 
     summary = _build_summary_text(collected)
     await message.answer(summary)
+    
+    # Обновляем стрик и проверяем достижения
+    streak = update_user_activity(user_id, "natal_profile")
+    unlocked_base = check_base_achievements(user_id)
+    
     await message.answer(MessagesData.NATAL_PROFILE_COMPLETED, reply_markup=get_back_to_main_keyboard())
+    
+    # Показываем достижения, если разблокированы
+    if unlocked_base:
+        for achievement_id in unlocked_base:
+            name, desc = get_achievement_info(achievement_id)
+            achievement_text = MessagesData.STREAK_ACHIEVEMENT_UNLOCKED.format(
+                achievement_name=name,
+                achievement_description=desc
+            )
+            await message.answer(achievement_text, reply_markup=get_back_to_main_keyboard())
+    
     await state.clear()
 
 

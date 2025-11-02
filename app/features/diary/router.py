@@ -10,6 +10,14 @@ from aiogram.types import CallbackQuery, Message
 
 from app.shared.decorators import catch_errors
 from app.shared.formatters import format_datetime_iso
+from app.shared.helpers import (
+    check_base_achievements,
+    check_daily_challenge_completion,
+    check_streak_achievements,
+    get_achievement_info,
+    get_personalized_recommendation,
+    update_user_activity,
+)
 from app.shared.keyboards import (
     get_back_to_main_keyboard,
     get_diary_category_keyboard,
@@ -159,6 +167,13 @@ async def handle_diary_observation(message: Message, state: FSMContext):
     }
     user_data["diary_observations"].append(observation)
     user_storage._save_data()
+    
+    # Обновляем стрик и статистику
+    streak = update_user_activity(user_id, "diary")
+    user_storage.increment_stat(user_id, "total_diary_entries", "diary")
+    unlocked_streak = check_streak_achievements(user_id, streak)
+    unlocked_base = check_base_achievements(user_id)
+    unlocked = unlocked_streak + unlocked_base
 
     result_text = (
         f"📝 Наблюдение сохранено!\n"
@@ -167,6 +182,40 @@ async def handle_diary_observation(message: Message, state: FSMContext):
         f"Дата: {observation['date']}"
     )
     await message.answer(result_text, reply_markup=get_diary_result_keyboard())
+    
+    # Показываем достижения, если разблокированы
+    if unlocked:
+        from app.shared.messages import MessagesData
+        for achievement_id in unlocked:
+            name, desc = get_achievement_info(achievement_id)
+            achievement_text = MessagesData.STREAK_ACHIEVEMENT_UNLOCKED.format(
+                achievement_name=name,
+                achievement_description=desc
+            )
+            await message.answer(achievement_text, reply_markup=get_back_to_main_keyboard())
+    
+    # Проверяем выполнение ежедневного задания
+    is_completed, challenge_data = check_daily_challenge_completion(user_id, "diary")
+    if is_completed and challenge_data:
+        from app.shared.formatters import pluralize_days
+        from app.shared.messages import MessagesData
+        challenges = user_storage.get_daily_challenges(user_id)
+        streak = challenges.get("streak", 0)
+        days_word = pluralize_days(streak)
+        completion_text = MessagesData.DAILY_CHALLENGE_COMPLETED.format(
+            reward=challenge_data.get("reward", "Отлично!"),
+            streak=streak,
+            days_word=days_word
+        )
+        await message.answer(completion_text)
+    
+    # Показываем персонализированную рекомендацию
+    recommendation = get_personalized_recommendation(user_id, "diary")
+    if recommendation:
+        from app.shared.keyboards import get_recommendation_keyboard
+        rec_text, rec_action = recommendation
+        await message.answer(rec_text, reply_markup=get_recommendation_keyboard(rec_action))
+    
     await state.clear()
 
 

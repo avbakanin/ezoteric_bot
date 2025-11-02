@@ -7,6 +7,13 @@ from aiogram.types import CallbackQuery, Message
 
 from app.shared.calculations import calculate_life_path_number, calculate_soul_number, validate_date
 from app.shared.decorators import catch_errors
+from app.shared.helpers import (
+    check_base_achievements,
+    check_streak_achievements,
+    get_achievement_info,
+    get_personalized_recommendation,
+    update_user_activity,
+)
 from app.shared.keyboards import get_back_to_main_keyboard, get_result_keyboard
 from app.shared.messages import (
     CallbackData,
@@ -32,8 +39,32 @@ async def process_life_path_number(message: Message, state: FSMContext, bot: Bot
             life_path = cached_result["life_path_result"]
             text = cached_result.get("text") or get_text(life_path, "life_path", user_id)
             result_text = get_format_life_path_result(life_path, text, saved_birth_date)
+            
+            # Обновляем стрик и проверяем достижения
+            streak = update_user_activity(user_id, "life_path")
+            unlocked_streak = check_streak_achievements(user_id, streak)
+            unlocked_base = check_base_achievements(user_id)
+            unlocked = unlocked_streak + unlocked_base
+            
             await bot.send_message(message.chat.id, result_text, reply_markup=get_result_keyboard())
             user_storage.increment_repeat_view(user_id)
+            
+            # Показываем достижения, если разблокированы
+            if unlocked:
+                for achievement_id in unlocked:
+                    name, desc = get_achievement_info(achievement_id)
+                    achievement_text = MessagesData.STREAK_ACHIEVEMENT_UNLOCKED.format(
+                        achievement_name=name,
+                        achievement_description=desc
+                    )
+                    await bot.send_message(message.chat.id, achievement_text, reply_markup=get_back_to_main_keyboard())
+            
+            # Показываем персонализированную рекомендацию
+            recommendation = get_personalized_recommendation(user_id, "life_path")
+            if recommendation:
+                from app.shared.keyboards import get_recommendation_keyboard
+                rec_text, rec_action = recommendation
+                await bot.send_message(message.chat.id, rec_text, reply_markup=get_recommendation_keyboard(rec_action))
             return
 
         await bot.send_message(
@@ -132,7 +163,31 @@ async def handle_birth_date(message: Message, state: FSMContext):
     text = get_text(life_path, "life_path", user_id)
     user_storage.save_daily_result(user_id, birth_date, life_path, soul_number, text)
 
+    # Обновляем стрик и проверяем достижения
+    streak = update_user_activity(user_id, "life_path")
+    unlocked_streak = check_streak_achievements(user_id, streak)
+    unlocked_base = check_base_achievements(user_id)
+    unlocked = unlocked_streak + unlocked_base
+
     result_text = f"🔮 ВАШЕ ЧИСЛО СУДЬБЫ: {life_path}\n{text}\n📅 Дата: {birth_date}"
     await message.answer(result_text, reply_markup=get_result_keyboard())
+    
+    # Показываем достижения, если разблокированы
+    if unlocked:
+        for achievement_id in unlocked:
+            name, desc = get_achievement_info(achievement_id)
+            achievement_text = MessagesData.STREAK_ACHIEVEMENT_UNLOCKED.format(
+                achievement_name=name,
+                achievement_description=desc
+            )
+            await message.answer(achievement_text, reply_markup=get_back_to_main_keyboard())
+    
+    # Показываем персонализированную рекомендацию
+    recommendation = get_personalized_recommendation(user_id, "life_path")
+    if recommendation:
+        from app.shared.keyboards import get_recommendation_keyboard
+        rec_text, rec_action = recommendation
+        await message.answer(rec_text, reply_markup=get_recommendation_keyboard(rec_action))
+    
     await state.clear()
 

@@ -31,6 +31,9 @@ from .premium import get_premium_info_keyboard
 # Профиль
 from .profile import get_profile_keyboard
 
+# Рекомендации
+from .recommendations import get_recommendation_keyboard
+
 # Результаты
 from .results import get_compatibility_result_keyboard, get_result_keyboard
 
@@ -66,4 +69,6 @@ __all__ = [
     "get_back_to_tarot_keyboard",
     "get_spreads_keyboard",
     "get_tarot_question_keyboard",
+    # Рекомендации
+    "get_recommendation_keyboard",
 ]

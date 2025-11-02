@@ -6,6 +6,12 @@ from aiogram.fsm.context import FSMContext
 
 from app.shared.calculations import calculate_life_path_number, validate_date
 from app.shared.decorators import catch_errors
+from app.shared.helpers import (
+    check_base_achievements,
+    check_streak_achievements,
+    get_achievement_info,
+    update_user_activity,
+)
 from app.shared.keyboards import get_back_to_main_keyboard, get_compatibility_result_keyboard
 from app.shared.messages import MessagesData, TextCommandsData
 from app.shared.state import UserStates
@@ -77,7 +83,25 @@ async def handle_second_date(message: types.Message, state: FSMContext):
     result_text = (
         f"💑 СОВМЕСТИМОСТЬ: {first_number} и {second_number}\nОценка: {score}/9\n{description}"
     )
-    await message.answer(result_text, reply_markup=get_compatibility_result_keyboard())
+    
+    # Обновляем стрик и проверяем достижения
+    streak = update_user_activity(user_id, "compatibility")
     user_storage.increment_usage(user_id, "compatibility")
+    unlocked_streak = check_streak_achievements(user_id, streak)
+    unlocked_base = check_base_achievements(user_id)
+    unlocked = unlocked_streak + unlocked_base
+    
+    await message.answer(result_text, reply_markup=get_compatibility_result_keyboard())
+    
+    # Показываем достижения, если разблокированы
+    if unlocked:
+        for achievement_id in unlocked:
+            name, desc = get_achievement_info(achievement_id)
+            achievement_text = MessagesData.STREAK_ACHIEVEMENT_UNLOCKED.format(
+                achievement_name=name,
+                achievement_description=desc
+            )
+            await message.answer(achievement_text, reply_markup=get_back_to_main_keyboard())
+    
     await state.clear()
 
