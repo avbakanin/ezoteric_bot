@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from typing import List, Sequence
 
 from aiogram import F, Router
@@ -18,17 +18,10 @@ from app.shared.astro.lunar_planner import (
     PhaseAdvice,
     lunar_planner_service,
 )
-from app.shared.birth_profiles import birth_profile_storage
 from app.shared.decorators import catch_errors
+from app.shared.helpers import get_today_local, get_user_timezone, is_premium
 from app.shared.keyboards import get_lunar_actions_keyboard
 from app.shared.messages import CallbackData, CommandsData, MessagesData, TextCommandsData
-from app.shared.storage import user_storage
-
-try:
-    from zoneinfo import ZoneInfo
-except ModuleNotFoundError:  # pragma: no cover
-    ZoneInfo = None  # type: ignore[assignment]
-
 
 router = Router()
 
@@ -39,18 +32,18 @@ router = Router()
 async def lunar_planner_command(message: Message, state: FSMContext):
     await state.clear()
     user_id = message.from_user.id
-    is_premium = _is_premium(user_id)
-    tz_name = _get_timezone(user_id)
-    today = _get_today_local(tz_name)
+    is_premium_user = is_premium(user_id)
+    tz_name = get_user_timezone(user_id)
+    today = get_today_local(tz_name)
 
-    days_count = 6 if is_premium else 4
+    days_count = 6 if is_premium_user else 4
     window = lunar_planner_service.build_window(start=today, tz_name=tz_name, days=days_count)
 
     suggestions_map = {
         ctx.date: lunar_planner_service.select_actions(
             day=ctx,
-            is_premium=is_premium,
-            limit=5 if is_premium else 3,
+            is_premium=is_premium_user,
+            limit=5 if is_premium_user else 3,
         )
         for ctx in window
     }
@@ -59,14 +52,14 @@ async def lunar_planner_command(message: Message, state: FSMContext):
         window=window,
         suggestions_map=suggestions_map,
         tz_name=tz_name,
-        is_premium=is_premium,
+        is_premium=is_premium_user,
     )
 
-    display_actions = _collect_display_actions(window, is_premium, limit=12 if is_premium else 8)
+    display_actions = _collect_display_actions(window, is_premium_user, limit=12 if is_premium_user else 8)
     buttons = [(action.slug, f"{action.emoji} {action.title}") for action in display_actions]
 
     extra_buttons: List[InlineKeyboardButton] = []
-    if not is_premium:
+    if not is_premium_user:
         extra_buttons.append(
             InlineKeyboardButton(text="💎 Расширить", callback_data=CallbackData.PREMIUM_INFO)
         )
@@ -85,28 +78,28 @@ async def lunar_planner_command(message: Message, state: FSMContext):
 async def lunar_planner_action_callback(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     user_id = callback.from_user.id
-    is_premium = _is_premium(user_id)
-    tz_name = _get_timezone(user_id)
-    today = _get_today_local(tz_name)
+    is_premium_user = is_premium(user_id)
+    tz_name = get_user_timezone(user_id)
+    today = get_today_local(tz_name)
 
     slug = callback.data.replace(CallbackData.LUNAR_ACTION_PREFIX, "", 1)
     action = lunar_planner_service.get_action(slug)
     if not action:
         await callback.answer("Сценарий не найден.", show_alert=True)
         return
-    if action.premium_only and not is_premium:
+    if action.premium_only and not is_premium_user:
         await callback.answer("Сценарий доступен в Premium.", show_alert=True)
         return
 
-    window = lunar_planner_service.build_window(start=today, tz_name=tz_name, days=7 if is_premium else 5)
+    window = lunar_planner_service.build_window(start=today, tz_name=tz_name, days=7 if is_premium_user else 5)
 
     details_text = _build_action_details(action, window)
 
-    display_actions = _collect_display_actions(window, is_premium, limit=12 if is_premium else 8)
+    display_actions = _collect_display_actions(window, is_premium_user, limit=12 if is_premium_user else 8)
     buttons = [(item.slug, f"{item.emoji} {item.title}") for item in display_actions]
 
     extra_buttons: List[InlineKeyboardButton] = []
-    if not is_premium:
+    if not is_premium_user:
         extra_buttons.append(
             InlineKeyboardButton(text="💎 Расширить", callback_data=CallbackData.PREMIUM_INFO)
         )
@@ -291,27 +284,6 @@ def _format_sign_duration(span: int) -> str:
     return f"в ближайшие {span} {_pluralize_days(span)}"
 
 
-def _is_premium(user_id: int) -> bool:
-    user = user_storage.get_user(user_id)
-    subscription = user.get("subscription", {})
-    return bool(subscription.get("active"))
-
-
-def _get_timezone(user_id: int) -> str:
-    profile = birth_profile_storage.get_profile(user_id)
-    if profile and profile.get("timezone"):
-        return profile["timezone"]
-    user = user_storage.get_user(user_id)
-    return user.get("timezone") or "UTC"
-
-
-def _get_today_local(tz_name: str) -> date:
-    if ZoneInfo is None:
-        return date.today()
-    try:
-        return datetime.now(ZoneInfo(tz_name)).date()
-    except Exception:
-        return date.today()
 
 
 def _pluralize_days(value: int) -> str:

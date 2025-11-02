@@ -751,8 +751,17 @@ ACTION_INDEX: Dict[str, ActionDefinition] = {action.slug: action for action in A
 
 
 class LunarPlannerService:
-    def __init__(self, ephemeris: EphemerisService = ephemeris_service):
+    def __init__(self, ephemeris: EphemerisService = ephemeris_service, cache_size: int = 100):
         self.ephemeris = ephemeris
+        self._day_cache: Dict[tuple[date, str], DayContext] = {}
+        self._cache_size = cache_size
+
+    def _prune_cache(self) -> None:
+        if len(self._day_cache) > self._cache_size:
+            keys = list(self._day_cache.keys())
+            keys.sort(key=lambda k: k[0])
+            keep = keys[-self._cache_size // 2:]
+            self._day_cache = {k: self._day_cache[k] for k in keep}
 
     def build_window(self, *, start: date, tz_name: str, days: int = 5) -> List[DayContext]:
         contexts: List[DayContext] = []
@@ -809,6 +818,9 @@ class LunarPlannerService:
         return action.phase_advice.get(phase)
 
     def _compute_day(self, target_date: date, tz_name: str) -> DayContext:
+        cache_key = (target_date, tz_name)
+        if cache_key in self._day_cache:
+            return self._day_cache[cache_key]
         dt_local = datetime.combine(target_date, time(hour=12, minute=0))
         if ZoneInfo is not None:
             try:
@@ -827,13 +839,16 @@ class LunarPlannerService:
         illumination = int(round((1 - cos(radians(angle))) * 50))
         sign_index = int(moon_lon // 30) % 12
         moon_sign = SIGN_DEFINITIONS[sign_index]
-        return DayContext(
+        result = DayContext(
             date=target_date,
             phase=phase,
             moon_sign=moon_sign,
             illumination=min(max(illumination, 0), 100),
             angle=angle,
         )
+        self._day_cache[cache_key] = result
+        self._prune_cache()
+        return result
 
     @staticmethod
     def _phase_from_angle(angle: float) -> PhaseDefinition:

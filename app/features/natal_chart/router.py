@@ -12,17 +12,11 @@ from aiogram.types import Message
 from app.shared.astro import ForecastResult, daily_transit_service, transit_interpreter
 from app.shared.birth_profiles import birth_profile_storage
 from app.shared.decorators import catch_errors
+from app.shared.helpers import is_premium
 from app.shared.keyboards import get_back_to_main_keyboard, get_premium_info_keyboard
 from app.shared.messages import CommandsData, MessagesData, TextCommandsData
-from app.shared.storage import user_storage
 
 router = Router()
-
-
-def _is_premium(user_id: int) -> bool:
-    user = user_storage.get_user(user_id)
-    subscription = user.get("subscription", {})
-    return bool(subscription.get("active"))
 
 
 def _format_iso_to_display(iso_date: str) -> str:
@@ -84,9 +78,9 @@ async def handle_natal_chart(message: Message, state: FSMContext):
         )
         return
 
-    is_premium = _is_premium(user_id)
+    is_premium_user = is_premium(user_id)
 
-    if is_premium:
+    if is_premium_user:
         text = transit_interpreter.render_forecast(forecast)
         await message.answer(text, reply_markup=get_back_to_main_keyboard())
         birth_profile_storage.save_forecast_text(

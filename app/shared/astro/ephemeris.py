@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterable, Literal, Sequence
+from typing import Dict, Iterable, Literal, Sequence, Tuple
 
 from flatlib import const, ephem  # type: ignore[import]
 from flatlib.chart import Chart  # type: ignore[import]
@@ -104,9 +104,18 @@ def _to_planet_position(obj: Object) -> PlanetPosition:
 class EphemerisService:
     """Упрощённый доступ к flatlib."""
 
-    def __init__(self, house_system: str = HOUSE_SYSTEM, planets: Sequence[str] = PLANET_CODES):
+    def __init__(self, house_system: str = HOUSE_SYSTEM, planets: Sequence[str] = PLANET_CODES, cache_size: int = 500):
         self.house_system = house_system
         self.planets = tuple(planets)
+        self._ephemeris_cache: Dict[Tuple[datetime, Tuple[str, ...]], dict[str, PlanetPosition]] = {}
+        self._cache_size = cache_size
+
+    def _prune_cache(self) -> None:
+        if len(self._ephemeris_cache) > self._cache_size:
+            keys = list(self._ephemeris_cache.keys())
+            keys.sort(key=lambda k: k[0])
+            keep = keys[-self._cache_size // 2:]
+            self._ephemeris_cache = {k: self._ephemeris_cache[k] for k in keep}
 
     def build_chart(
         self,
@@ -182,6 +191,9 @@ class EphemerisService:
 
     def get_ephemeris(self, dt: datetime, planets: Iterable[str] | None = None) -> dict[str, PlanetPosition]:
         planets = tuple(planets or self.planets)
+        cache_key = (dt.replace(microsecond=0), planets)
+        if cache_key in self._ephemeris_cache:
+            return self._ephemeris_cache[cache_key]
         chart = Chart(
             _build_datetime(dt, "UTC"),
             GeoPos(0.0, 0.0),
@@ -189,7 +201,10 @@ class EphemerisService:
             IDs=planets,
         )
 
-        return {code: _to_planet_position(chart.getObject(code)) for code in planets}
+        result = {code: _to_planet_position(chart.getObject(code)) for code in planets}
+        self._ephemeris_cache[cache_key] = result
+        self._prune_cache()
+        return result
 
 
 ephemeris_service = EphemerisService()

@@ -2,50 +2,18 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from app.shared.astro import aspect_of_day_service
-from app.shared.birth_profiles import birth_profile_storage
 from app.shared.decorators import catch_errors
+from app.shared.helpers import get_today_local, get_user_timezone, is_premium
 from app.shared.keyboards import get_back_to_main_keyboard, get_premium_info_keyboard
 from app.shared.messages import CommandsData, MessagesData, TextCommandsData
-from app.shared.storage import user_storage
-
-try:
-    from zoneinfo import ZoneInfo
-except ModuleNotFoundError:  # pragma: no cover
-    ZoneInfo = None  # type: ignore[assignment]
-
 
 router = Router()
-
-
-def _is_premium(user_id: int) -> bool:
-    user = user_storage.get_user(user_id)
-    subscription = user.get("subscription", {})
-    return bool(subscription.get("active"))
-
-
-def _get_timezone(user_id: int) -> str:
-    profile = birth_profile_storage.get_profile(user_id)
-    if profile and profile.get("timezone"):
-        return profile["timezone"]
-    user = user_storage.get_user(user_id)
-    return user.get("timezone") or "UTC"
-
-
-def _local_today(tz_name: str):
-    if ZoneInfo is None:
-        return datetime.utcnow().date()
-    try:
-        return datetime.now(ZoneInfo(tz_name)).date()
-    except Exception:
-        return datetime.utcnow().date()
 
 
 @router.message(Command(CommandsData.ASPECT_OF_DAY), StateFilter("*"))
@@ -54,17 +22,17 @@ def _local_today(tz_name: str):
 async def aspect_of_day_command(message: Message, state: FSMContext):
     await state.clear()
     user_id = message.from_user.id
-    is_premium = _is_premium(user_id)
+    is_premium_user = is_premium(user_id)
 
-    tz_name = _get_timezone(user_id)
-    today = _local_today(tz_name)
+    tz_name = get_user_timezone(user_id)
+    today = get_today_local(tz_name)
 
-    aspects = aspect_of_day_service.get_top(today, count=2 if is_premium else 1)
-    text = aspect_of_day_service.format_message(aspects, is_premium)
+    aspects = aspect_of_day_service.get_top(today, count=2 if is_premium_user else 1)
+    text = aspect_of_day_service.format_message(aspects, is_premium_user)
 
     reply_markup = get_back_to_main_keyboard()
 
-    if not is_premium:
+    if not is_premium_user:
         text = "\n\n".join([text, MessagesData.ASPECT_OF_DAY_PREMIUM_PROMO, MessagesData.ASPECT_OF_DAY_PREMIUM_CTA])
         reply_markup = get_premium_info_keyboard()
     else:

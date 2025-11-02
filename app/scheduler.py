@@ -21,6 +21,7 @@ from app.shared.astro import (
 )
 from app.shared.birth_profiles import birth_profile_storage
 from app.shared.calculations import calculate_daily_number
+from app.shared.helpers import get_user_timezone, is_premium
 from app.shared.messages import DiaryMessages, MessagesData
 from app.shared.storage import user_storage
 from app.shared.texts import get_number_texts
@@ -51,17 +52,6 @@ class ForecastPreview:
         )
 
 
-def _user_is_premium(user_id: int) -> bool:
-    user = user_storage.get_user(user_id)
-    subscription = user.get("subscription", {})
-    return bool(subscription.get("active"))
-
-
-def _get_user_timezone(user_id: int, user_data: dict[str, Any]) -> str:
-    profile = birth_profile_storage.get_profile(user_id)
-    if profile and profile.get("timezone"):
-        return profile["timezone"]
-    return user_data.get("timezone") or "UTC"
 
 
 logger = logging.getLogger(__name__)
@@ -193,8 +183,7 @@ class NotificationScheduler:
                 continue
 
             entries = user_storage.get_diary_entries_in_range(user_id, start_period, end_period)
-            subscription = user_data.get("subscription", {})
-            is_premium = bool(subscription.get("active"))
+            is_premium_user = is_premium(user_id)
 
             if not entries:
                 try:
@@ -216,7 +205,7 @@ class NotificationScheduler:
                 DiaryMessages.DIGEST_TITLE.format(count=len(entries), top_categories=top_categories or "Без темы"),
             ]
 
-            if not is_premium:
+            if not is_premium_user:
                 message_lines.append(DiaryMessages.HISTORY_PREMIUM_PROMO)
 
             message_lines.append(DiaryMessages.DIGEST_REMINDER)
@@ -322,8 +311,8 @@ class NotificationScheduler:
             if forecast.missing_fields:
                 continue
 
-            is_premium = _user_is_premium(user_id)
-            if is_premium:
+            is_premium_user = is_premium(user_id)
+            if is_premium_user:
                 message_text = transit_interpreter.render_forecast(forecast)
             else:
                 preview = ForecastPreview.build(forecast)
@@ -346,7 +335,7 @@ class NotificationScheduler:
                 user_id,
                 local_date.isoformat(),
                 message_text,
-                is_preview=not is_premium,
+                is_preview=not is_premium_user,
             )
 
     async def _send_retrograde_alerts(self, now: datetime.datetime):  # noqa: C901
@@ -370,14 +359,14 @@ class NotificationScheduler:
             if not notifications.get("enabled", True):
                 continue
 
-            tz_name = _get_user_timezone(user_id, user_data)
+            tz_name = get_user_timezone(user_id)
             local_now = self._to_local(now, tz_name)
             if not (local_now.hour == self.target_hour and local_now.minute == self.target_minute):
                 continue
 
             local_date = local_now.date()
-            is_premium = _user_is_premium(user_id)
-            allowed_planets: Sequence[str] = retrograde_service.tracked_planets if is_premium else ("Mercury",)
+            is_premium_user = is_premium(user_id)
+            allowed_planets: Sequence[str] = retrograde_service.tracked_planets if is_premium_user else ("Mercury",)
 
             for planet in allowed_planets:
                 for period in periods_map.get(planet, []):
@@ -385,12 +374,12 @@ class NotificationScheduler:
                     start_iso = period.start.isoformat()
 
                     if period.pre_alert == local_date and not user_storage.has_retro_alert(user_id, planet, "pre", pre_iso):
-                        message = retrograde_service.format_pre_alert(period, is_premium, local_date)
+                        message = retrograde_service.format_pre_alert(period, is_premium_user, local_date)
                         await self._send_retro_message(user_id, message)
                         user_storage.mark_retro_alert(user_id, planet, "pre", pre_iso)
 
                     if period.start == local_date and not user_storage.has_retro_alert(user_id, planet, "start", start_iso):
-                        message = retrograde_service.format_start_alert(period, is_premium)
+                        message = retrograde_service.format_start_alert(period, is_premium_user)
                         await self._send_retro_message(user_id, message)
                         user_storage.mark_retro_alert(user_id, planet, "start", start_iso)
 

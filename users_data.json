@@ -16,11 +16,11 @@
       "type": "premium"
     },
     "usage_stats": {
-      "daily_requests": 0,
+      "daily_requests": 1,
       "compatibility_checks": 0,
       "repeat_views": 0,
       "requests": 0,
-      "last_reset": "2025-11-01"
+      "last_reset": "2025-11-02"
     },
     "daily_cache": {
       "date": null,
@@ -45,8 +45,9 @@
     },
     "retro_alerts": {},
     "created_at": "2025-11-01 21:19:03",
-    "last_activity": "2025-11-01 21:21:01",
-    "admin_mode": "premium"
+    "last_activity": "2025-11-02 16:55:57",
+    "admin_mode": "premium",
+    "repeat_views": 0
   },
   "101": {
     "birth_date": null,
@@ -92,7 +93,7 @@
     },
     "retro_alerts": {},
     "created_at": "2025-11-01 22:39:59",
-    "last_activity": "2025-11-01 22:39:59"
+    "last_activity": "2025-11-02 16:55:27"
   },
   "202": {
     "birth_date": null,
@@ -138,7 +139,7 @@
     },
     "retro_alerts": {},
     "created_at": "2025-11-01 22:39:59",
-    "last_activity": "2025-11-01 22:39:59"
+    "last_activity": "2025-11-02 16:55:27"
   },
   "999": {
     "birth_date": null,
@@ -184,7 +185,7 @@
     },
     "retro_alerts": {},
     "created_at": "2025-11-01 22:56:46",
-    "last_activity": "2025-11-01 22:56:46"
+    "last_activity": "2025-11-02 16:55:27"
   },
   "1111": {
     "birth_date": null,
@@ -277,5 +278,51 @@
     "retro_alerts": {},
     "created_at": "2025-11-01 23:00:37",
     "last_activity": "2025-11-01 23:00:37"
+  },
+  "9999": {
+    "birth_date": null,
+    "birth_time": null,
+    "timezone": "Europe/Moscow",
+    "utc_offset": null,
+    "lat": null,
+    "lon": null,
+    "place_name": null,
+    "age": null,
+    "life_path_number": null,
+    "soul_number": null,
+    "subscription": {
+      "active": false,
+      "expires": null,
+      "type": "free"
+    },
+    "usage_stats": {
+      "daily_requests": 0,
+      "compatibility_checks": 0,
+      "repeat_views": 0,
+      "requests": 0,
+      "last_reset": "2025-11-02"
+    },
+    "daily_cache": {
+      "date": null,
+      "life_path_result": null,
+      "soul_number_result": null,
+      "daily_number_result": null,
+      "birth_date": null
+    },
+    "notifications": {
+      "enabled": true,
+      "time": "11:00"
+    },
+    "text_history": [],
+    "affirmation_history": [],
+    "last_daily_notification": null,
+    "daily_number": {
+      "date": null,
+      "number": null,
+      "text": null
+    },
+    "retro_alerts": {},
+    "created_at": "2025-11-02 16:43:54",
+    "last_activity": "2025-11-02 16:55:27"
   }
 }

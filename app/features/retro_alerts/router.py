@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import timedelta
 
 from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
@@ -10,33 +10,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from app.shared.astro import retrograde_service
-from app.shared.birth_profiles import birth_profile_storage
 from app.shared.decorators import catch_errors
+from app.shared.helpers import get_today_local, get_user_timezone, is_premium
 from app.shared.keyboards import get_back_to_main_keyboard, get_premium_info_keyboard
 from app.shared.messages import CommandsData, MessagesData, TextCommandsData
-from app.shared.storage import user_storage
-
-try:
-    from zoneinfo import ZoneInfo
-except ModuleNotFoundError:  # pragma: no cover
-    ZoneInfo = None  # type: ignore[assignment]
-
 
 router = Router()
-
-
-def _is_premium(user_id: int) -> bool:
-    user = user_storage.get_user(user_id)
-    subscription = user.get("subscription", {})
-    return bool(subscription.get("active"))
-
-
-def _get_user_timezone(user_id: int) -> str:
-    profile = birth_profile_storage.get_profile(user_id)
-    if profile and profile.get("timezone"):
-        return profile["timezone"]
-    user = user_storage.get_user(user_id)
-    return user.get("timezone") or "UTC"
 
 
 @router.message(Command(CommandsData.RETRO_ALERTS), StateFilter("*"))
@@ -45,13 +24,13 @@ def _get_user_timezone(user_id: int) -> str:
 async def retro_alerts_command(message: Message, state: FSMContext):
     await state.clear()
     user_id = message.from_user.id
-    is_premium = _is_premium(user_id)
+    is_premium_user = is_premium(user_id)
 
-    tz_name = _get_user_timezone(user_id)
-    today_local = _get_today_local(tz_name)
+    tz_name = get_user_timezone(user_id)
+    today_local = get_today_local(tz_name)
 
     periods = retrograde_service.get_periods(today_local, today_local + timedelta(days=120))
-    allowed_planets = retrograde_service.tracked_planets if is_premium else ("Mercury",)
+    allowed_planets = retrograde_service.tracked_planets if is_premium_user else ("Mercury",)
 
     blocks: list[str] = []
     for planet in allowed_planets:
@@ -59,7 +38,7 @@ async def retro_alerts_command(message: Message, state: FSMContext):
         next_period = retrograde_service.get_next_period(planet, planet_periods, today_local)
         if not next_period:
             continue
-        blocks.append(retrograde_service.format_summary(next_period, is_premium, today_local))
+        blocks.append(retrograde_service.format_summary(next_period, is_premium_user, today_local))
 
     if not blocks:
         await message.answer(
@@ -70,7 +49,7 @@ async def retro_alerts_command(message: Message, state: FSMContext):
 
     reply_markup = get_back_to_main_keyboard()
 
-    if not is_premium and any(planet != "Mercury" for planet in retrograde_service.tracked_planets):
+    if not is_premium_user and any(planet != "Mercury" for planet in retrograde_service.tracked_planets):
         blocks.extend(
             [
                 MessagesData.RETRO_ALERTS_PREMIUM_PROMO,
@@ -78,19 +57,9 @@ async def retro_alerts_command(message: Message, state: FSMContext):
             ]
         )
         reply_markup = get_premium_info_keyboard()
-    elif is_premium:
+    elif is_premium_user:
         blocks.append(MessagesData.RETRO_ALERTS_PREMIUM_THANKS)
 
     await message.answer("\n\n".join(blocks), reply_markup=reply_markup)
-
-
-def _get_today_local(tz_name: str) -> date:
-    if ZoneInfo is None:
-        return date.today()
-    try:
-        tz = ZoneInfo(tz_name)
-        return datetime.now(tz).date()
-    except Exception:
-        return date.today()
 
 

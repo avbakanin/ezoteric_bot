@@ -117,18 +117,18 @@ def get_affirmation(user_id: int | None = None, *, force_new: bool = False) -> A
                 was_forced=False,
             )
 
+        from .helpers import is_premium as is_premium_check
+
         user_data = user_storage.get_user(user_id)
-        subscription = user_data.get("subscription", {})
-        is_premium = bool(subscription.get("active"))
+        is_premium = is_premium_check(user_id)
         today = datetime.now().strftime("%Y-%m-%d")
 
         raw_history = user_data.get("affirmation_history", [])
         normalized_history = _normalize_affirmation_history(raw_history if isinstance(raw_history, list) else [])
 
-        save_required = False
         if normalized_history != raw_history:
             user_data["affirmation_history"] = normalized_history
-            save_required = True
+            user_storage._save_data()
 
         generated_today = sum(1 for entry in normalized_history if entry.get("date") == today)
         last_affirmation = normalized_history[-1] if normalized_history else None
@@ -136,8 +136,6 @@ def get_affirmation(user_id: int | None = None, *, force_new: bool = False) -> A
         effective_force = bool(force_new and is_premium)
 
         if not effective_force and last_affirmation and last_affirmation.get("date") == today:
-            if save_required:
-                user_storage._save_data()
             return AffirmationResult(
                 number=int(last_affirmation.get("number") or 0),
                 text=last_affirmation.get("text", ""),
@@ -163,7 +161,6 @@ def get_affirmation(user_id: int | None = None, *, force_new: bool = False) -> A
 
         updated_history = normalized_history + [new_entry]
         user_data["affirmation_history"] = updated_history[-10:]
-        save_required = True
         user_storage._save_data()
 
         return AffirmationResult(

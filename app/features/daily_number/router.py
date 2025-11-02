@@ -9,6 +9,7 @@ from aiogram.types import CallbackQuery, Message
 
 from app.shared.calculations import calculate_daily_number
 from app.shared.decorators import catch_errors
+from app.shared.helpers import is_premium
 from app.shared.keyboards import get_back_to_main_keyboard, get_premium_info_keyboard
 from app.shared.messages import (
     CallbackData,
@@ -24,10 +25,9 @@ router = Router()
 
 
 async def _send_daily_number(send_func, user_id: int):
-    user_data = user_storage.get_user(user_id)
-    is_premium = user_data["subscription"].get("active", False)
+    is_premium_user = is_premium(user_id)
 
-    if not is_premium:
+    if not is_premium_user:
         await send_func(
             MessagesData.DAILY_NUMBER_PREMIUM_REQUIRED,
             reply_markup=get_premium_info_keyboard(),
